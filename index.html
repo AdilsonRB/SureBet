@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Surebet Completa</title>
+    <title>Calculadora Surebet Profissional</title>
     <style>
         * {
             box-sizing: border-box;
@@ -205,7 +205,6 @@
         </div>
     </div>
 
-    <!-- Firebase Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
         import { 
@@ -218,6 +217,7 @@
             signInAnonymously 
         } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
+        // Configuração do Firebase (substitua com suas credenciais)
         const firebaseConfig = {
             apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
             authDomain: "surebet-8a1ac.firebaseapp.com",
@@ -232,7 +232,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Elementos da Interface
+        // Elementos da interface
         const elements = {
             odd1: document.getElementById('odd1'),
             odd2: document.getElementById('odd2'),
@@ -247,7 +247,7 @@
             successMessage: document.getElementById('success-message')
         };
 
-        // Funções de Cálculo
+        // Funções de cálculo
         function calculateStakes() {
             const o1 = parseFloat(elements.odd1.value);
             const o2 = parseFloat(elements.odd2.value);
@@ -316,16 +316,24 @@
             );
         });
 
-        // Sistema de Salvamento
+        // Sistema de salvamento com UID
         elements.saveButton.addEventListener('click', async () => {
             elements.loading.style.display = 'block';
             elements.errorMessage.style.display = 'none';
             
             try {
-                const user = await signInAnonymously(auth);
-                
+                // Autenticação anônima
+                const userCredential = await signInAnonymously(auth);
+                const user = userCredential.user;
+
+                // Verificação do UID
+                if(!user || !user.uid) {
+                    throw new Error('Falha na autenticação');
+                }
+
+                // Preparar dados com UID
                 const betData = {
-                    uid: user.user.uid,
+                    uid: user.uid, // Campo crítico para as regras de segurança
                     odd1: parseFloat(elements.odd1.value),
                     odd2: parseFloat(elements.odd2.value),
                     stake1: parseFloat(elements.stake1.value),
@@ -336,6 +344,7 @@
                     timestamp: new Date().toISOString()
                 };
 
+                // Salvar no Firestore
                 await addDoc(collection(db, 'bets'), betData);
                 
                 elements.successMessage.style.display = 'block';
@@ -344,6 +353,7 @@
                 }, 3000);
 
             } catch (error) {
+                console.error('Erro detalhado:', error);
                 elements.errorMessage.textContent = `Erro: ${error.message}`;
                 elements.errorMessage.style.display = 'block';
             } finally {
