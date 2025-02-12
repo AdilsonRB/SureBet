@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Surebet Completa</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .input-container {
+            flex: 1;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .results {
+            margin-top: 25px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .result-item {
+            margin: 15px 0;
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item span {
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        #total-invested span { color: #2980b9; }
+        #profit-amount { color: #27ae60; }
+        #profit-percentage { color: #e67e22; }
+
+        .actions {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #3498db;
+            margin: 15px 0;
+        }
+
+        #error-message {
+            color: #e74c3c;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        #success-message {
+            color: #27ae60;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .currency {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📊 Calculadora Surebet</h2>
+        <div id="error-message"></div>
+
+        <div class="input-group">
+            <div class="input-container">
+                <label for="odd1">Odd 1</label>
+                <input type="number" step="0.01" id="odd1" placeholder="Ex: 1.80">
+            </div>
+            <div class="input-container">
+                <label for="odd2">Odd 2</label>
+                <input type="number" step="0.01" id="odd2" placeholder="Ex: 2.20">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-container">
+                <label for="stake1">Valor Aposta 1</label>
+                <div class="currency">R$</div>
+                <input type="number" step="0.01" id="stake1" placeholder="0.00">
+            </div>
+            <div class="input-container">
+                <label for="stake2">Valor Aposta 2</label>
+                <div class="currency">R$</div>
+                <input type="number" step="0.01" id="stake2" placeholder="0.00">
+            </div>
+        </div>
+
+        <div class="results">
+            <div class="result-item" id="total-invested">
+                Total Investido: <span>0.00</span>
+            </div>
+            <div class="result-item">
+                Lucro Garantido: <span id="profit-amount">0.00</span>
+            </div>
+            <div class="result-item">
+                ROI (%): <span id="profit-percentage">0.00%</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="save-bet">Salvar Aposta</button>
+            <div id="loading" class="loading">Salvando...</div>
+            <div id="success-message">✔ Aposta registrada com sucesso!</div>
+        </div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc 
+        } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        import { 
+            getAuth, 
+            signInAnonymously 
+        } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
+            authDomain: "surebet-8a1ac.firebaseapp.com",
+            projectId: "surebet-8a1ac",
+            storageBucket: "surebet-8a1ac.firebasestorage.app",
+            messagingSenderId: "356453418095",
+            appId: "1:356453418095:web:b5fa12af09432b9676b99a",
+            measurementId: "G-WYX4MDS2F8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Elementos da Interface
+        const elements = {
+            odd1: document.getElementById('odd1'),
+            odd2: document.getElementById('odd2'),
+            stake1: document.getElementById('stake1'),
+            stake2: document.getElementById('stake2'),
+            totalInvested: document.querySelector('#total-invested span'),
+            profitPercentage: document.getElementById('profit-percentage'),
+            profitAmount: document.getElementById('profit-amount'),
+            saveButton: document.getElementById('save-bet'),
+            loading: document.getElementById('loading'),
+            errorMessage: document.getElementById('error-message'),
+            successMessage: document.getElementById('success-message')
+        };
+
+        // Funções de Cálculo
+        function calculateStakes() {
+            const o1 = parseFloat(elements.odd1.value);
+            const o2 = parseFloat(elements.odd2.value);
+            
+            if(o1 > 0 && o2 > 0) {
+                const total = parseFloat(elements.stake1.value) + parseFloat(elements.stake2.value);
+                if(total > 0) {
+                    elements.stake1.value = ((total * o2) / (o1 + o2)).toFixed(2);
+                    elements.stake2.value = ((total * o1) / (o1 + o2)).toFixed(2);
+                }
+            }
+            calculateProfit();
+        }
+
+        function handleStakeInput(inputElement, otherElement, odd1, odd2) {
+            const value = parseFloat(inputElement.value);
+            if(odd1 > 0 && odd2 > 0 && !isNaN(value)) {
+                otherElement.value = ((value * odd1) / odd2).toFixed(2);
+            }
+            calculateProfit();
+        }
+
+        function calculateProfit() {
+            const o1 = parseFloat(elements.odd1.value);
+            const o2 = parseFloat(elements.odd2.value);
+            const s1 = parseFloat(elements.stake1.value) || 0;
+            const s2 = parseFloat(elements.stake2.value) || 0;
+            
+            const totalInvestment = s1 + s2;
+            elements.totalInvested.textContent = totalInvestment.toFixed(2);
+
+            let profitPercentage = 0;
+            let profitAmount = 0;
+            
+            if(o1 > 0 && o2 > 0) {
+                const totalImplied = (1/o1 + 1/o2);
+                if(totalImplied < 1) {
+                    profitPercentage = ((1 / totalImplied) - 1) * 100;
+                    profitAmount = totalInvestment * profitPercentage / 100;
+                }
+            }
+            
+            elements.profitPercentage.textContent = profitPercentage.toFixed(2) + '%';
+            elements.profitAmount.textContent = profitAmount.toFixed(2);
+        }
+
+        // Event Listeners
+        elements.odd1.addEventListener('input', calculateStakes);
+        elements.odd2.addEventListener('input', calculateStakes);
+        
+        elements.stake1.addEventListener('input', () => {
+            handleStakeInput(
+                elements.stake1,
+                elements.stake2,
+                parseFloat(elements.odd1.value),
+                parseFloat(elements.odd2.value)
+            );
+        });
+
+        elements.stake2.addEventListener('input', () => {
+            handleStakeInput(
+                elements.stake2,
+                elements.stake1,
+                parseFloat(elements.odd2.value),
+                parseFloat(elements.odd1.value)
+            );
+        });
+
+        // Sistema de Salvamento
+        elements.saveButton.addEventListener('click', async () => {
+            elements.loading.style.display = 'block';
+            elements.errorMessage.style.display = 'none';
+            
+            try {
+                const user = await signInAnonymously(auth);
+                
+                const betData = {
+                    uid: user.user.uid,
+                    odd1: parseFloat(elements.odd1.value),
+                    odd2: parseFloat(elements.odd2.value),
+                    stake1: parseFloat(elements.stake1.value),
+                    stake2: parseFloat(elements.stake2.value),
+                    total: parseFloat(elements.totalInvested.textContent),
+                    lucro: parseFloat(elements.profitAmount.textContent),
+                    roi: parseFloat(elements.profitPercentage.textContent.replace('%', '')),
+                    timestamp: new Date().toISOString()
+                };
+
+                await addDoc(collection(db, 'bets'), betData);
+                
+                elements.successMessage.style.display = 'block';
+                setTimeout(() => {
+                    elements.successMessage.style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                elements.errorMessage.textContent = `Erro: ${error.message}`;
+                elements.errorMessage.style.display = 'block';
+            } finally {
+                elements.loading.style.display = 'none';
+            }
+        });
+
+        // Inicialização
+        calculateProfit();
+    </script>
+</body>
+</html>
