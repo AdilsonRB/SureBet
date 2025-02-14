@@ -5,11 +5,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calculadora Surebet Profissional</title>
   <style>
-    /* [Mantenha os estilos anteriores sem alterações] */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+
+    /* Container principal com layout original */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      margin-bottom: 30px;
+    }
+
+    h2, h3 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .input-container {
+      flex: 1;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #34495e;
+      font-weight: 600;
+      font-size: 0.95em;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #3498db;
+      background: white;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+    }
+
+    .results {
+      margin-top: 25px;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .result-item {
+      margin: 15px 0;
+      font-size: 1.1em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-item span {
+      font-weight: 700;
+      font-size: 1.2em;
+    }
+
+    #total-invested span { color: #2980b9; }
+    #profit-amount { color: #27ae60; }
+    #profit-percentage { color: #e67e22; }
+
+    .actions {
+      margin-top: 25px;
+      text-align: center;
+    }
+
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background: #2980b9;
+      transform: translateY(-1px);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      color: #3498db;
+      margin: 15px 0;
+    }
+
+    #error-message {
+      color: #e74c3c;
+      background: #f8d7da;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      display: none;
+    }
+
+    #success-message {
+      color: #27ae60;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .currency {
+      position: absolute;
+      right: 15px;
+      top: 38px;
+      color: #7f8c8d;
+      font-weight: 500;
+    }
+
+    /* Seção de Histórico com o mesmo estilo do container principal */
+    .history {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #3498db;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
-  <!-- Container de Login e Calculadora -->
+  <!-- Container da Calculadora e Login -->
   <div class="container" id="calculator-container">
     <h2>📊 Calculadora Surebet</h2>
     
@@ -97,7 +278,6 @@
       addDoc,
       query,
       where,
-      getDocs,
       onSnapshot
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { 
@@ -141,15 +321,13 @@
 
     let currentUser = null; // Armazena o usuário logado
 
-    // Observador de estado de autenticação
+    // Observador de autenticação
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
         console.log('Usuário autenticado:', currentUser.displayName);
-        // Oculta o botão de login e exibe a seção de histórico
         elements.googleLoginButton.style.display = 'none';
         document.getElementById('history-section').style.display = 'block';
-        // Carrega o histórico (você pode usar um listener em tempo real)
         loadBetHistory(currentUser.uid);
       } else {
         currentUser = null;
@@ -227,16 +405,14 @@
       );
     });
 
-    // Função para carregar o histórico de apostas (com listener em tempo real)
+    // Carrega o histórico de apostas usando onSnapshot para atualizações em tempo real
     function loadBetHistory(uid) {
       const betsRef = collection(db, 'bets');
       const q = query(betsRef, where('uid', '==', uid));
       
-      // Usando onSnapshot para atualizações em tempo real
       onSnapshot(q, (querySnapshot) => {
         const tbody = document.querySelector('#bet-history-table tbody');
-        tbody.innerHTML = ""; // Limpa linhas anteriores
-        
+        tbody.innerHTML = "";
         querySnapshot.forEach(doc => {
           const data = doc.data();
           const row = document.createElement('tr');
@@ -252,22 +428,24 @@
           `;
           tbody.appendChild(row);
         });
+      }, (error) => {
+        console.error("Erro ao carregar histórico:", error);
       });
     }
 
-    // Função para exportar a tabela para CSV
+    // Exportação para CSV
     function exportTableToCSV(filename) {
       const csv = [];
       const rows = document.querySelectorAll("#bet-history-table tr");
 
-      for (let row of rows) {
+      rows.forEach(row => {
         const cols = row.querySelectorAll("td, th");
         const rowData = [];
-        for (let col of cols) {
-          rowData.push('"' + col.innerText.replace(/"/g, '""') + '"'); // Escapa aspas
-        }
+        cols.forEach(col => {
+          rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+        });
         csv.push(rowData.join(","));
-      }
+      });
 
       const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
       const downloadLink = document.createElement("a");
@@ -283,7 +461,7 @@
       exportTableToCSV('historico_apostas.csv');
     });
 
-    // Função para salvar a aposta
+    // Salva a aposta no Firestore
     elements.saveButton.addEventListener('click', async () => {
       if (!currentUser) {
         elements.errorMessage.textContent = "Por favor, realize o login com o Google antes de salvar a aposta.";
@@ -307,8 +485,10 @@
           timestamp: new Date().toISOString()
         };
 
+        console.log("Salvando aposta:", betData);
         await addDoc(collection(db, 'bets'), betData);
-        
+        console.log("Aposta salva com sucesso!");
+
         elements.successMessage.style.display = 'block';
         setTimeout(() => {
           elements.successMessage.style.display = 'none';
@@ -316,7 +496,7 @@
 
         // O histórico será atualizado automaticamente via onSnapshot.
       } catch (error) {
-        console.error('Erro detalhado:', error);
+        console.error('Erro ao salvar aposta:', error);
         elements.errorMessage.textContent = `Erro: ${error.message}`;
         elements.errorMessage.style.display = 'block';
       } finally {
@@ -324,11 +504,10 @@
       }
     });
 
-    // Configurar o Login com Google (caso o usuário clique manualmente)
+    // Login com Google (caso o usuário clique manualmente)
     elements.googleLoginButton.addEventListener('click', async () => {
       try {
-        const result = await signInWithPopup(auth, provider);
-        // O observador onAuthStateChanged cuidará do restante
+        await signInWithPopup(auth, provider);
       } catch (error) {
         console.error('Erro no login com Google:', error);
         elements.errorMessage.textContent = `Erro no login: ${error.message}`;
