@@ -61,10 +61,12 @@
       display: flex;
       gap: 15px;
       margin-bottom: 25px;
+      flex-wrap: wrap;
     }
     .input-container {
       flex: 1;
       position: relative;
+      min-width: 250px;
     }
     label {
       display: block;
@@ -174,7 +176,7 @@
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 15px;
-      min-width: 600px; /* Garante que a tabela mantenha o layout adequado */
+      min-width: 700px; /* Ajustado para acomodar a nova coluna */
     }
     table, th, td {
       border: 1px solid #ccc;
@@ -231,6 +233,14 @@
       </div>
     </div>
 
+    <!-- Campo para informar a casa de aposta -->
+    <div class="input-group">
+      <div class="input-container">
+        <label for="bookmaker">Casa de Aposta</label>
+        <input type="text" id="bookmaker" placeholder="Ex: Bet365">
+      </div>
+    </div>
+
     <div class="results">
       <div class="result-item" id="total-invested">
         Total Investido: <span>0.00</span>
@@ -257,6 +267,7 @@
       <thead>
         <tr>
           <th>Data</th>
+          <th>Casa de Aposta</th>
           <th>Odd 1</th>
           <th>Odd 2</th>
           <th>Stake 1</th>
@@ -322,7 +333,8 @@
       loading: document.getElementById('loading'),
       errorMessage: document.getElementById('error-message'),
       successMessage: document.getElementById('success-message'),
-      googleLoginButton: document.getElementById('google-login')
+      googleLoginButton: document.getElementById('google-login'),
+      bookmaker: document.getElementById('bookmaker')
     };
 
     // Referências para o cabeçalho com informações do usuário
@@ -395,7 +407,7 @@
         const totalImplied = (1 / o1 + 1 / o2);
         if (totalImplied < 1) {
           profitPercentage = ((1 / totalImplied) - 1) * 100;
-          profitAmount = totalInvestment * profitPercentage / 100;
+          profitAmount = totalInvestment * (profitPercentage / 100);
         }
       }
       elements.profitPercentage.textContent = profitPercentage.toFixed(2) + '%';
@@ -434,6 +446,7 @@
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${new Date(data.timestamp).toLocaleString()}</td>
+            <td>${data.bookmaker || ''}</td>
             <td>${data.odd1.toFixed(2)}</td>
             <td>${data.odd2.toFixed(2)}</td>
             <td>${data.stake1.toFixed(2)}</td>
@@ -493,6 +506,7 @@
           total: parseFloat(elements.totalInvested.textContent),
           lucro: parseFloat(elements.profitAmount.textContent),
           roi: parseFloat(elements.profitPercentage.textContent.replace('%', '')),
+          bookmaker: elements.bookmaker.value || "", // Adicionamos a casa de aposta
           timestamp: new Date().toISOString()
         };
         console.log("Salvando aposta:", betData);
