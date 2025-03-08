@@ -189,6 +189,13 @@
       background: #3498db;
       color: #fff;
     }
+    /* Estiliza o seletor de filtros */
+    #date-filter {
+      margin-bottom: 15px;
+      padding: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
@@ -263,6 +270,18 @@
   <!-- Seção de Histórico de Apostas -->
   <div class="history" id="history-section" style="display: none;">
     <h3>Histórico de Apostas</h3>
+
+    <!-- Filtro de datas (24h, 48h, 7 dias, 30 dias, ou todos) -->
+    <div class="actions">
+      <select id="date-filter">
+        <option value="all">Todos</option>
+        <option value="24h">Últimas 24 horas</option>
+        <option value="48h">Últimas 48 horas</option>
+        <option value="7d">Últimos 7 dias</option>
+        <option value="30d">Últimos 30 dias</option>
+      </select>
+    </div>
+
     <table id="bet-history-table">
       <thead>
         <tr>
@@ -295,7 +314,8 @@
       addDoc,
       query,
       where,
-      onSnapshot
+      onSnapshot,
+      orderBy
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { 
       getAuth, 
@@ -334,15 +354,18 @@
       errorMessage: document.getElementById('error-message'),
       successMessage: document.getElementById('success-message'),
       googleLoginButton: document.getElementById('google-login'),
-      bookmaker: document.getElementById('bookmaker')
+      bookmaker: document.getElementById('bookmaker'),
+      dateFilter: document.getElementById('date-filter') // Para o filtro
     };
 
     // Referências para o cabeçalho com informações do usuário
     const userInfo = document.getElementById('user-info');
     const userName = document.getElementById('user-name');
     const signOutButton = document.getElementById('sign-out');
+    const historySection = document.getElementById('history-section');
 
     let currentUser = null;
+    let unsubscribeHistory = null; // Para parar o onSnapshot ao mudar o filtro
 
     // Observador do estado de autenticação
     onAuthStateChanged(auth, (user) => {
@@ -352,13 +375,14 @@
         userName.textContent = currentUser.displayName || "Usuário";
         userInfo.style.display = 'block';
         elements.googleLoginButton.style.display = 'none';
-        document.getElementById('history-section').style.display = 'block';
-        loadBetHistory(currentUser.uid);
+        historySection.style.display = 'block';
+        // Carrega histórico inicial (sem filtros)
+        loadBetHistory(currentUser.uid, 'all');
       } else {
         currentUser = null;
         userInfo.style.display = 'none';
         elements.googleLoginButton.style.display = 'block';
-        document.getElementById('history-section').style.display = 'none';
+        historySection.style.display = 'none';
       }
     });
 
@@ -414,38 +438,62 @@
       elements.profitAmount.textContent = profitAmount.toFixed(2);
     }
 
-    // Listeners para os inputs
-    elements.odd1.addEventListener('input', calculateStakes);
-    elements.odd2.addEventListener('input', calculateStakes);
-    elements.stake1.addEventListener('input', () => {
-      handleStakeInput(
-        elements.stake1,
-        elements.stake2,
-        parseFloat(elements.odd1.value),
-        parseFloat(elements.odd2.value)
-      );
-    });
-    elements.stake2.addEventListener('input', () => {
-      handleStakeInput(
-        elements.stake2,
-        elements.stake1,
-        parseFloat(elements.odd2.value),
-        parseFloat(elements.odd1.value)
-      );
-    });
+    // Carrega o histórico de apostas com base no filtro selecionado
+    function loadBetHistory(uid, filter) {
+      // Se já houver um onSnapshot ativo, paramos para não acumular listeners
+      if (unsubscribeHistory) {
+        unsubscribeHistory();
+      }
 
-    // Carrega o histórico de apostas com onSnapshot para atualizações em tempo real
-    function loadBetHistory(uid) {
       const betsRef = collection(db, 'bets');
-      const q = query(betsRef, where('uid', '==', uid));
-      onSnapshot(q, (querySnapshot) => {
+      let betsQuery;
+
+      // Ordenação sempre do mais recente para o mais antigo
+      // e filtragem por UID
+      // Por padrão, buscamos tudo (filter === 'all')
+      betsQuery = query(
+        betsRef,
+        where('uid', '==', uid),
+        orderBy('timestamp', 'desc')
+      );
+
+      // Caso não seja 'all', calculamos a data mínima
+      if (filter !== 'all') {
+        const now = new Date();
+        const startDate = new Date();
+
+        if (filter === '24h') {
+          startDate.setHours(now.getHours() - 24);
+        } else if (filter === '48h') {
+          startDate.setHours(now.getHours() - 48);
+        } else if (filter === '7d') {
+          startDate.setDate(now.getDate() - 7);
+        } else if (filter === '30d') {
+          startDate.setDate(now.getDate() - 30);
+        }
+        
+        const isoStart = startDate.toISOString();
+        betsQuery = query(
+          betsRef,
+          where('uid', '==', uid),
+          where('timestamp', '>=', isoStart),
+          orderBy('timestamp', 'desc')
+        );
+      }
+
+      // Mantemos a referência para podermos parar depois (unsubscribe)
+      unsubscribeHistory = onSnapshot(betsQuery, (querySnapshot) => {
         const tbody = document.querySelector('#bet-history-table tbody');
         tbody.innerHTML = "";
         querySnapshot.forEach(doc => {
           const data = doc.data();
+          // Convertemos a string timestamp para data local
+          const dateObj = new Date(data.timestamp);
+
+          // Montamos a linha da tabela
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${new Date(data.timestamp).toLocaleString()}</td>
+            <td>${dateObj.toLocaleString()}</td>
             <td>${data.bookmaker || ''}</td>
             <td>${data.odd1.toFixed(2)}</td>
             <td>${data.odd2.toFixed(2)}</td>
@@ -461,6 +509,14 @@
         console.error("Erro ao carregar histórico:", error);
       });
     }
+
+    // Ao mudar o filtro no select, recarrega o histórico
+    elements.dateFilter.addEventListener('change', (event) => {
+      const selectedFilter = event.target.value;
+      if (currentUser) {
+        loadBetHistory(currentUser.uid, selectedFilter);
+      }
+    });
 
     // Exporta a tabela para CSV
     function exportTableToCSV(filename) {
@@ -483,6 +539,7 @@
       downloadLink.click();
       document.body.removeChild(downloadLink);
     }
+
     document.getElementById('export-csv').addEventListener('click', () => {
       exportTableToCSV('historico_apostas.csv');
     });
@@ -506,8 +563,8 @@
           total: parseFloat(elements.totalInvested.textContent),
           lucro: parseFloat(elements.profitAmount.textContent),
           roi: parseFloat(elements.profitPercentage.textContent.replace('%', '')),
-          bookmaker: elements.bookmaker.value || "", // Adicionamos a casa de aposta
-          timestamp: new Date().toISOString()
+          bookmaker: elements.bookmaker.value || "",
+          timestamp: new Date().toISOString() // Salvando como ISOString
         };
         console.log("Salvando aposta:", betData);
         await addDoc(collection(db, 'bets'), betData);
