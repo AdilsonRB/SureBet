@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -20,7 +20,7 @@
     #user-info {
       text-align: right;
       margin-bottom: 20px;
-      display: none;
+      display: none; /* Fica visível só quando logado */
     }
     #user-info span {
       font-weight: bold;
@@ -176,7 +176,7 @@
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 15px;
-      min-width: 700px;
+      min-width: 700px; /* Ajustado para acomodar o layout */
     }
     table, th, td {
       border: 1px solid #ccc;
@@ -285,7 +285,7 @@
     <table id="bet-history-table">
       <thead>
         <tr>
-          <th>Data</th>
+          <th>Data/Hora</th>
           <th>Casa de Aposta</th>
           <th>Odd 1</th>
           <th>Odd 2</th>
@@ -322,27 +322,32 @@
       getAuth, 
       signInWithPopup, 
       GoogleAuthProvider,
-      onAuthStateChanged
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // ==== Configuração do Firebase com appId ====
+    // ====== CONFIGURAÇÕES DO FIREBASE ======
     const firebaseConfig = {
       apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
       authDomain: "surebet-8alac.firebaseapp.com",
       projectId: "surebet-8alac",
       storageBucket: "surebet-8alac.appspot.com",
       messagingSenderId: "356453418095",
-      appId: "1:356453418095:web:b5fa12af09432b9676b99a"  // <-- App ID aqui
-      // Se tiver measurementId, inclua também
+      appId: "1:356453418095:web:b5fa12af09432b9676b99a"
     };
 
-    // Inicializa Firebase
+    // Inicializa o Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Referências de elementos da interface
+    // ====== Persistência de login ======
+    // Garante que, ao recarregar a página, a sessão seja mantida
+    await setPersistence(auth, browserLocalPersistence);
+
+    // ====== Referências de elementos da interface ======
     const elements = {
       odd1: document.getElementById('odd1'),
       odd2: document.getElementById('odd2'),
@@ -367,7 +372,7 @@
     let currentUser = null;
     let unsubscribeHistory = null;
 
-    // Observador de estado de autenticação
+    // Observador de estado de autenticação (mantém login após refresh)
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
@@ -386,7 +391,7 @@
       }
     });
 
-    // Função de logout
+    // ====== Função de logout ======
     signOutButton.addEventListener('click', async () => {
       try {
         await auth.signOut();
@@ -450,17 +455,13 @@
     elements.odd2.addEventListener('input', calculateStakes);
 
     elements.stake1.addEventListener('input', () => {
-      handleStakeInput(
-        elements.stake1,
-        elements.stake2,
+      handleStakeInput(elements.stake1, elements.stake2,
         parseFloat(elements.odd1.value),
         parseFloat(elements.odd2.value)
       );
     });
     elements.stake2.addEventListener('input', () => {
-      handleStakeInput(
-        elements.stake2,
-        elements.stake1,
+      handleStakeInput(elements.stake2, elements.stake1,
         parseFloat(elements.odd2.value),
         parseFloat(elements.odd1.value)
       );
@@ -517,16 +518,20 @@
           // Converte Firestore Timestamp -> Date
           let dateObj;
           if (data.timestamp && typeof data.timestamp.toDate === 'function') {
-            // Timestamp nativo do Firestore
             dateObj = data.timestamp.toDate();
           } else {
-            // Se houver docs antigos em string, tenta converter
+            // Caso ainda existam docs antigos em string ou outro formato
             dateObj = new Date(data.timestamp);
           }
 
+          // Converte para o horário de Brasília (ou ajuste para sua região)
+          const dateStr = dateObj.toLocaleString("pt-BR", {
+            timeZone: "America/Sao_Paulo"
+          });
+
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${dateObj.toLocaleString()}</td>
+            <td>${dateStr}</td>
             <td>${data.bookmaker || ''}</td>
             <td>${data.odd1.toFixed(2)}</td>
             <td>${data.odd2.toFixed(2)}</td>
