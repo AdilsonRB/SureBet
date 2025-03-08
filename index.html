@@ -233,8 +233,7 @@
   </style>
 </head>
 <body>
-
-  <!-- Cabeçalho do usuário (login/logout) -->
+  <!-- Cabeçalho do usuário -->
   <div id="user-info">
     <span id="user-name"></span>
     <button id="sign-out">Sair</button>
@@ -244,10 +243,8 @@
   <div class="container" id="calculator-container">
     <h2>Calculadora Surebet</h2>
 
-    <!-- Mensagem de erro -->
     <div id="error-message"></div>
 
-    <!-- Inputs para Odds e Stakes -->
     <div class="input-group">
       <div class="input-container">
         <label for="odd1">Odd 1</label>
@@ -258,6 +255,7 @@
         <input type="number" step="0.01" id="odd2" placeholder="Ex: 2.20">
       </div>
     </div>
+
     <div class="input-group">
       <div class="input-container" style="position:relative;">
         <label for="stake1">Valor Aposta 1</label>
@@ -270,6 +268,7 @@
         <input type="number" step="0.01" id="stake2" placeholder="0.00">
       </div>
     </div>
+
     <div class="input-group">
       <div class="input-container">
         <label for="bookmaker">Casa de Aposta</label>
@@ -277,23 +276,18 @@
       </div>
     </div>
 
-    <!-- Resultados -->
     <div class="results">
       <div class="result-item" id="total-invested">
-        Total Investido:
-        <span>0.00</span>
+        Total Investido: <span>0.00</span>
       </div>
       <div class="result-item">
-        Lucro Garantido:
-        <span id="profit-amount">0.00</span>
+        Lucro Garantido: <span id="profit-amount">0.00</span>
       </div>
       <div class="result-item">
-        ROI (%):
-        <span id="profit-percentage">0.00%</span>
+        ROI (%): <span id="profit-percentage">0.00%</span>
       </div>
     </div>
 
-    <!-- Ações de salvar / login -->
     <div class="actions">
       <button id="google-login">Login com Google</button>
       <button id="save-bet">Salvar Aposta</button>
@@ -302,11 +296,9 @@
     </div>
   </div>
 
-  <!-- Histórico -->
-  <div class="history" id="history-section" style="display:none;">
+  <!-- Seção de Histórico -->
+  <div class="history" id="history-section" style="display: none;">
     <h3>Histórico de Apostas</h3>
-
-    <!-- Filtro de data -->
     <div class="actions">
       <select id="date-filter">
         <option value="all">Todos</option>
@@ -316,7 +308,6 @@
         <option value="30d">Últimos 30 dias</option>
       </select>
     </div>
-
     <table id="bet-history-table">
       <thead>
         <tr>
@@ -333,13 +324,11 @@
       </thead>
       <tbody></tbody>
     </table>
-
     <div class="actions">
       <button id="export-csv">Exportar CSV</button>
     </div>
   </div>
 
-  <!-- Script principal -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { 
@@ -349,7 +338,8 @@
       query,
       where,
       onSnapshot,
-      orderBy
+      orderBy,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { 
       getAuth, 
@@ -360,7 +350,7 @@
       browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // ==== CONFIGURAÇÃO DO FIREBASE ====
+    // Configurações do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
       authDomain: "surebet-8a1ac.firebaseapp.com",
@@ -370,154 +360,139 @@
       appId: "1:356453418095:web:b5fa12af09432b9676b99a"
     };
 
-    // Inicializa Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Mantém usuário logado após refresh
     await setPersistence(auth, browserLocalPersistence);
 
-    // Referências de elementos
-    const elements = {
-      odd1: document.getElementById('odd1'),
-      odd2: document.getElementById('odd2'),
-      stake1: document.getElementById('stake1'),
-      stake2: document.getElementById('stake2'),
-      totalInvested: document.querySelector('#total-invested span'),
-      profitPercentage: document.getElementById('profit-percentage'),
-      profitAmount: document.getElementById('profit-amount'),
-      saveButton: document.getElementById('save-bet'),
-      loading: document.getElementById('loading'),
-      errorMessage: document.getElementById('error-message'),
-      successMessage: document.getElementById('success-message'),
-      googleLoginButton: document.getElementById('google-login'),
-      bookmaker: document.getElementById('bookmaker'),
-      dateFilter: document.getElementById('date-filter')
-    };
+    // Referências dos elementos
+    const odd1 = document.getElementById('odd1');
+    const odd2 = document.getElementById('odd2');
+    const stake1 = document.getElementById('stake1');
+    const stake2 = document.getElementById('stake2');
+    const totalInvested = document.querySelector('#total-invested span');
+    const profitPercentage = document.getElementById('profit-percentage');
+    const profitAmount = document.getElementById('profit-amount');
+    const bookmaker = document.getElementById('bookmaker');
+
+    const googleLoginButton = document.getElementById('google-login');
+    const saveButton = document.getElementById('save-bet');
+    const loading = document.getElementById('loading');
+    const errorMessage = document.getElementById('error-message');
+    const successMessage = document.getElementById('success-message');
+    const dateFilter = document.getElementById('date-filter');
 
     const userInfo = document.getElementById('user-info');
     const userName = document.getElementById('user-name');
     const signOutButton = document.getElementById('sign-out');
     const historySection = document.getElementById('history-section');
+
     let currentUser = null;
     let unsubscribeHistory = null;
 
-    // === Observador de Autenticação ===
+    // Observador de autenticação
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
-        console.log("[Auth] Logado como:", currentUser.displayName || user.uid);
-        userName.textContent = currentUser.displayName || "Usuário";
+        userName.textContent = user.displayName || "Usuário";
         userInfo.style.display = 'flex';
-        elements.googleLoginButton.style.display = 'none';
+        googleLoginButton.style.display = 'none';
         historySection.style.display = 'block';
-
-        // Carrega histórico
         loadBetHistory(currentUser.uid, 'all');
       } else {
         currentUser = null;
         userInfo.style.display = 'none';
-        elements.googleLoginButton.style.display = 'inline-block';
+        googleLoginButton.style.display = 'inline-block';
         historySection.style.display = 'none';
       }
     });
 
-    // === Logout ===
     signOutButton.addEventListener('click', async () => {
       try {
         await auth.signOut();
-      } catch (error) {
-        console.error("[Logout] Erro =>", error);
+      } catch (err) {
+        console.error("Erro ao sair:", err);
       }
     });
 
-    // === Cálculos de Surebet ===
     function calculateProfit() {
-      const o1 = parseFloat(elements.odd1.value);
-      const o2 = parseFloat(elements.odd2.value);
-      const s1 = parseFloat(elements.stake1.value) || 0;
-      const s2 = parseFloat(elements.stake2.value) || 0;
+      const o1 = parseFloat(odd1.value) || 0;
+      const o2 = parseFloat(odd2.value) || 0;
+      const s1 = parseFloat(stake1.value) || 0;
+      const s2 = parseFloat(stake2.value) || 0;
 
       const total = s1 + s2;
-      elements.totalInvested.textContent = total.toFixed(2);
+      totalInvested.textContent = total.toFixed(2);
 
       let profitPct = 0;
       let profitAmt = 0;
       if (o1 > 0 && o2 > 0) {
-        const sum = (1/o1 + 1/o2);
+        const sum = (1 / o1 + 1 / o2);
         if (sum < 1) {
           profitPct = ((1 / sum) - 1) * 100;
           profitAmt = total * (profitPct / 100);
         }
       }
-      elements.profitPercentage.textContent = profitPct.toFixed(2) + '%';
-      elements.profitAmount.textContent = profitAmt.toFixed(2);
+      profitPercentage.textContent = profitPct.toFixed(2) + "%";
+      profitAmount.textContent = profitAmt.toFixed(2);
     }
 
+    // Função atualizada para calcular os stakes usando um valor padrão quando não há aposta informada
     function calculateStakes() {
-      const o1 = parseFloat(elements.odd1.value);
-      const o2 = parseFloat(elements.odd2.value);
-      const s1 = parseFloat(elements.stake1.value) || 0;
-      const s2 = parseFloat(elements.stake2.value) || 0;
+      const o1 = parseFloat(odd1.value) || 0;
+      const o2 = parseFloat(odd2.value) || 0;
+      let s1 = parseFloat(stake1.value) || 0;
+      let s2 = parseFloat(stake2.value) || 0;
 
+      let total = s1 + s2;
+      if (total === 0) {
+        total = 100; // Valor padrão se nenhum stake for informado
+      }
+      
       if (o1 > 0 && o2 > 0) {
-        const total = s1 + s2;
-        if (total > 0) {
-          elements.stake1.value = ((total * o2) / (o1 + o2)).toFixed(2);
-          elements.stake2.value = ((total * o1) / (o1 + o2)).toFixed(2);
-        }
+        stake1.value = ((total * o2) / (o1 + o2)).toFixed(2);
+        stake2.value = ((total * o1) / (o1 + o2)).toFixed(2);
       }
       calculateProfit();
     }
 
-    elements.odd1.addEventListener('input', calculateStakes);
-    elements.odd2.addEventListener('input', calculateStakes);
-    elements.stake1.addEventListener('input', () => {
-      handleStakeInput(
-        elements.stake1,
-        elements.stake2,
-        parseFloat(elements.odd1.value),
-        parseFloat(elements.odd2.value)
-      );
-    });
-    elements.stake2.addEventListener('input', () => {
-      handleStakeInput(
-        elements.stake2,
-        elements.stake1,
-        parseFloat(elements.odd2.value),
-        parseFloat(elements.odd1.value)
-      );
-    });
-
     function handleStakeInput(elA, elB, oddA, oddB) {
-      const val = parseFloat(elA.value);
-      if (oddA > 0 && oddB > 0 && !isNaN(val)) {
+      const val = parseFloat(elA.value) || 0;
+      if (oddA > 0 && oddB > 0 && val > 0) {
         elB.value = ((val * oddA) / oddB).toFixed(2);
       }
       calculateProfit();
     }
 
-    // === Login com Google ===
-    elements.googleLoginButton.addEventListener('click', async () => {
+    // Listeners para recálculo automático
+    odd1.addEventListener('input', calculateStakes);
+    odd2.addEventListener('input', calculateStakes);
+    stake1.addEventListener('input', () => {
+      handleStakeInput(stake1, stake2, parseFloat(odd1.value), parseFloat(odd2.value));
+    });
+    stake2.addEventListener('input', () => {
+      handleStakeInput(stake2, stake1, parseFloat(odd2.value), parseFloat(odd1.value));
+    });
+
+    // Login com Google
+    googleLoginButton.addEventListener('click', async () => {
+      errorMessage.style.display = 'none';
       try {
         await signInWithPopup(auth, provider);
-      } catch (error) {
-        elements.errorMessage.textContent = `Erro no login: ${error.message}`;
-        elements.errorMessage.style.display = 'block';
+      } catch (err) {
+        errorMessage.textContent = "Erro no login: " + err.message;
+        errorMessage.style.display = 'block';
       }
     });
 
-    // === Carregar Histórico (onSnapshot) ===
+    // Carregar histórico
     function loadBetHistory(uid, filter) {
-      if (unsubscribeHistory) {
-        unsubscribeHistory();
-      }
+      if (unsubscribeHistory) unsubscribeHistory();
       const betsRef = collection(db, 'bets');
       let betsQuery = query(betsRef, where('uid','==',uid), orderBy('timestamp','desc'));
 
-      // Filtro de data
       if (filter !== 'all') {
         const now = new Date();
         const startDate = new Date();
@@ -530,6 +505,7 @@
         } else if (filter === '30d') {
           startDate.setDate(now.getDate() - 30);
         }
+        // Filtro por data (string ISO)
         betsQuery = query(
           betsRef,
           where('uid','==',uid),
@@ -540,12 +516,12 @@
 
       unsubscribeHistory = onSnapshot(betsQuery, (snapshot) => {
         const tbody = document.querySelector('#bet-history-table tbody');
-        tbody.innerHTML = "";
+        tbody.innerHTML = '';
         snapshot.forEach(doc => {
           const data = doc.data();
-          // Convertendo string ISO -> Data local
+          // Se timestamp for string ISO
           const dateObj = new Date(data.timestamp);
-          const dateStr = dateObj.toLocaleString("pt-BR",{ timeZone: "America/Sao_Paulo" });
+          const dateStr = dateObj.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${dateStr}</td>
@@ -561,19 +537,18 @@
           tbody.appendChild(row);
         });
       }, (err) => {
-        elements.errorMessage.textContent = `Erro ao carregar histórico: ${err.message}`;
-        elements.errorMessage.style.display = 'block';
+        errorMessage.textContent = "Erro ao carregar histórico: " + err.message;
+        errorMessage.style.display = 'block';
       });
     }
 
-    // Seletor de filtro de data
-    elements.dateFilter.addEventListener('change', (ev) => {
+    dateFilter.addEventListener('change', (ev) => {
       if (currentUser) {
         loadBetHistory(currentUser.uid, ev.target.value);
       }
     });
 
-    // === Exportar CSV ===
+    // Exportar CSV
     document.getElementById('export-csv').addEventListener('click', () => {
       const rows = document.querySelectorAll('#bet-history-table tr');
       const csv = [];
@@ -581,7 +556,7 @@
         const cols = row.querySelectorAll('td, th');
         const rowData = [];
         cols.forEach(col => {
-          rowData.push('\"' + col.innerText.replace(/\"/g, '\"\"') + '\"');
+          rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
         });
         csv.push(rowData.join(','));
       });
@@ -595,51 +570,42 @@
       document.body.removeChild(link);
     });
 
-    // === Salvar Aposta no Firestore ===
-    elements.saveButton.addEventListener('click', async () => {
+    // Salvar Aposta
+    saveButton.addEventListener('click', async () => {
       if (!currentUser) {
-        elements.errorMessage.textContent = "Por favor, faça login com o Google antes de salvar a aposta.";
-        elements.errorMessage.style.display = 'block';
+        errorMessage.textContent = "Por favor, faça login com o Google antes de salvar a aposta.";
+        errorMessage.style.display = 'block';
         return;
       }
-      elements.errorMessage.style.display = 'none';
-      elements.loading.style.display = 'block';
-
+      errorMessage.style.display = 'none';
+      loading.style.display = 'block';
       try {
-        const nowISO = new Date().toISOString();
-        const betData = {
+        const newBet = {
           uid: currentUser.uid,
-          odd1: parseFloat(elements.odd1.value),
-          odd2: parseFloat(elements.odd2.value),
-          stake1: parseFloat(elements.stake1.value),
-          stake2: parseFloat(elements.stake2.value),
-          total: parseFloat(elements.totalInvested.textContent),
-          lucro: parseFloat(elements.profitAmount.textContent),
-          roi: parseFloat(elements.profitPercentage.textContent.replace('%','')),
-          bookmaker: elements.bookmaker.value || "",
-          timestamp: nowISO // salva data local como string ISO
+          odd1: parseFloat(odd1.value),
+          odd2: parseFloat(odd2.value),
+          stake1: parseFloat(stake1.value),
+          stake2: parseFloat(stake2.value),
+          total: parseFloat(totalInvested.textContent),
+          lucro: parseFloat(profitAmount.textContent),
+          roi: parseFloat(profitPercentage.textContent.replace('%','')),
+          bookmaker: bookmaker.value || "",
+          timestamp: new Date().toISOString()
         };
 
-        await addDoc(collection(db, 'bets'), betData);
-        elements.successMessage.style.display = 'block';
-        setTimeout(() => { elements.successMessage.style.display = 'none'; }, 3000);
+        await addDoc(collection(db, 'bets'), newBet);
+        successMessage.style.display = 'block';
+        setTimeout(() => { successMessage.style.display = 'none'; }, 3000);
       } catch (err) {
-        elements.errorMessage.textContent = `Erro ao salvar aposta: ${err.message}`;
-        elements.errorMessage.style.display = 'block';
+        errorMessage.textContent = `Erro ao salvar aposta: ${err.message}`;
+        errorMessage.style.display = 'block';
       } finally {
-        elements.loading.style.display = 'none';
+        loading.style.display = 'none';
       }
     });
 
-    // Inicia o ROI e Lucro como 0
-    function initCalculator() {
-      elements.odd1.value = "";
-      elements.odd2.value = "";
-      elements.stake1.value = "";
-      elements.stake2.value = "";
-      calculateProfit();
-    }
-    initCalculator(); // define tudo como 0 no carregamento
+    // Inicializa cálculo com zero
+    calculateProfit();
   </script>
 </body>
 </html>
