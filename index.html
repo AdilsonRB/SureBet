@@ -173,62 +173,98 @@
       text-align: center;
     }
 
-    /* Seção de histórico */
+    /* Seção de Histórico - Layout Atualizado */
     .history {
       width: 100%;
       max-width: 900px;
       background: #fff;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       padding: 20px;
+      margin-top: 30px;
     }
     .history h3 {
       text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       font-weight: 600;
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       color: #333;
     }
-    #date-filter {
-      border: 1.5px solid #ccc;
-      border-radius: 6px;
-      padding: 5px;
+    .history .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 15px;
-      font-size: 0.9rem;
+    }
+    .history #date-filter {
+      padding: 8px 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
       outline: none;
-      cursor: pointer;
       transition: 0.2s;
     }
-    #date-filter:focus {
+    .history #date-filter:focus {
       border-color: #3498db;
       box-shadow: 0 0 4px rgba(52, 152, 219, 0.2);
     }
-    table {
+    .history table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.9rem;
-      margin-top: 10px;
-      min-width: 700px;
+      font-size: 0.95rem;
+      overflow-x: auto;
+      display: block;
     }
-    table thead {
+    .history table thead {
       background: #3498db;
       color: #fff;
     }
-    th, td {
+    .history table th, .history table td {
       border: 1px solid #eee;
-      padding: 8px 10px;
+      padding: 10px 15px;
       text-align: center;
     }
-    .history .actions {
-      margin-top: 20px;
-      text-align: center;
+    .history table tbody tr:hover {
+      background-color: #f2f2f2;
     }
-    /* Botão de exportar CSV */
     .history .actions button {
       background: #2ecc71;
+      padding: 8px 16px;
+      font-size: 0.95rem;
     }
     .history .actions button:hover {
       background: #27ae60;
+    }
+
+    /* Media Query para otimizar a tabela em dispositivos móveis */
+    @media (max-width: 600px) {
+      .history table, .history thead, .history tbody, .history th, .history td, .history tr {
+        display: block;
+      }
+      .history thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+      }
+      .history tr {
+        border: 1px solid #eee;
+        margin-bottom: 10px;
+        padding: 10px;
+      }
+      .history td {
+        border: none;
+        padding: 10px;
+        position: relative;
+        text-align: left;
+        white-space: normal;
+      }
+      .history td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        font-weight: bold;
+      }
     }
   </style>
 </head>
@@ -307,6 +343,7 @@
         <option value="7d">Últimos 7 dias</option>
         <option value="30d">Últimos 30 dias</option>
       </select>
+      <button id="export-csv">Exportar CSV</button>
     </div>
     <table id="bet-history-table">
       <thead>
@@ -324,9 +361,6 @@
       </thead>
       <tbody></tbody>
     </table>
-    <div class="actions">
-      <button id="export-csv">Exportar CSV</button>
-    </div>
   </div>
 
   <script type="module">
@@ -338,8 +372,7 @@
       query,
       where,
       onSnapshot,
-      orderBy,
-      serverTimestamp
+      orderBy
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
     import { 
       getAuth, 
@@ -505,7 +538,6 @@
         } else if (filter === '30d') {
           startDate.setDate(now.getDate() - 30);
         }
-        // Filtro por data (string ISO)
         betsQuery = query(
           betsRef,
           where('uid','==',uid),
@@ -519,20 +551,19 @@
         tbody.innerHTML = '';
         snapshot.forEach(doc => {
           const data = doc.data();
-          // Se timestamp for string ISO
           const dateObj = new Date(data.timestamp);
           const dateStr = dateObj.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${dateStr}</td>
-            <td>${data.bookmaker || ''}</td>
-            <td>${data.odd1.toFixed(2)}</td>
-            <td>${data.odd2.toFixed(2)}</td>
-            <td>${data.stake1.toFixed(2)}</td>
-            <td>${data.stake2.toFixed(2)}</td>
-            <td>${data.total.toFixed(2)}</td>
-            <td>${data.lucro.toFixed(2)}</td>
-            <td>${data.roi.toFixed(2)}%</td>
+            <td data-label="Data/Hora">${dateStr}</td>
+            <td data-label="Casa de Aposta">${data.bookmaker || ''}</td>
+            <td data-label="Odd 1">${data.odd1.toFixed(2)}</td>
+            <td data-label="Odd 2">${data.odd2.toFixed(2)}</td>
+            <td data-label="Stake 1">${data.stake1.toFixed(2)}</td>
+            <td data-label="Stake 2">${data.stake2.toFixed(2)}</td>
+            <td data-label="Total Investido">${data.total.toFixed(2)}</td>
+            <td data-label="Lucro">${data.lucro.toFixed(2)}</td>
+            <td data-label="ROI (%)">${data.roi.toFixed(2)}%</td>
           `;
           tbody.appendChild(row);
         });
