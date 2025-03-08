@@ -3,220 +3,250 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calculadora Surebet Profissional</title>
+  <title>Calculadora Surebet Minimalista</title>
   <style>
-    /* ======= LAYOUT ORIGINAL ======= */
+    /* Reset básico */
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
+
+    /* Body minimalista */
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      color: #333;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
     }
-    /* Cabeçalho para informações do usuário */
+
+    /* Cabeçalho do usuário (login/logout) */
     #user-info {
-      text-align: right;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
       margin-bottom: 20px;
-      display: none;
+      display: none; /* só aparece quando logado */
     }
     #user-info span {
-      font-weight: bold;
+      font-weight: 600;
       margin-right: 10px;
     }
     #user-info button {
-      padding: 5px 10px;
-      font-size: 0.9em;
-      background: #e74c3c;
       border: none;
-      color: #fff;
       border-radius: 5px;
+      padding: 6px 12px;
+      background: #e74c3c;
+      color: #fff;
       cursor: pointer;
       transition: background 0.3s ease;
     }
     #user-info button:hover {
       background: #c0392b;
     }
-    /* Container principal com layout original */
+
+    /* Container principal */
     .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(10px);
+      width: 100%;
+      max-width: 500px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
       margin-bottom: 30px;
     }
-    h2, h3 {
-      color: #2c3e50;
+    h2 {
       text-align: center;
       margin-bottom: 20px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: #333;
     }
+
+    /* Mensagens de erro e sucesso */
+    #error-message {
+      display: none;
+      background: #ffd4d4;
+      color: #a70000;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+    #success-message {
+      display: none;
+      color: #27ae60;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    /* Inputs e campos */
     .input-group {
       display: flex;
       gap: 15px;
-      margin-bottom: 25px;
+      margin-bottom: 15px;
       flex-wrap: wrap;
     }
     .input-container {
       flex: 1;
-      position: relative;
-      min-width: 250px;
+      min-width: 200px;
     }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #34495e;
-      font-weight: 600;
-      font-size: 0.95em;
+    .input-container label {
+      font-weight: 500;
+      margin-bottom: 5px;
+      display: inline-block;
+      font-size: 0.9rem;
+      color: #555;
     }
-    input {
+    .input-container input {
       width: 100%;
-      padding: 12px 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: all 0.3s ease;
-      background: #f8f9fa;
-    }
-    input:focus {
+      padding: 10px;
+      border: 1.5px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
       outline: none;
-      border-color: #3498db;
-      background: white;
-      box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+      transition: 0.2s;
     }
+    .input-container input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 4px rgba(52, 152, 219, 0.2);
+    }
+    .currency {
+      position: absolute;
+      right: 15px;
+      top: 37px;
+      color: #aaa;
+      font-size: 0.85rem;
+    }
+
+    /* Resultados da calculadora */
     .results {
-      margin-top: 25px;
-      padding: 20px;
-      background: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
     }
     .result-item {
-      margin: 15px 0;
-      font-size: 1.1em;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
+      padding: 6px 0;
+      font-size: 0.95rem;
       border-bottom: 1px solid #eee;
     }
     .result-item:last-child {
       border-bottom: none;
     }
     .result-item span {
-      font-weight: 700;
-      font-size: 1.2em;
+      font-weight: 600;
     }
-    #total-invested span { color: #2980b9; }
-    #profit-amount { color: #27ae60; }
-    #profit-percentage { color: #e67e22; }
+
+    /* Ações (botões) */
     .actions {
-      margin-top: 25px;
       text-align: center;
+      margin-top: 15px;
     }
     button {
-      background: #3498db;
-      color: white;
       border: none;
-      padding: 12px 25px;
-      border-radius: 8px;
+      background: #3498db;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 1em;
-      transition: all 0.3s ease;
-      margin-top: 20px;
+      font-size: 0.95rem;
+      transition: 0.2s;
     }
     button:hover {
       background: #2980b9;
-      transform: translateY(-1px);
     }
     .loading {
       display: none;
-      text-align: center;
+      margin-top: 10px;
+      font-size: 0.9rem;
       color: #3498db;
-      margin: 15px 0;
+      text-align: center;
     }
-    #error-message {
-      color: #e74c3c;
-      background: #f8d7da;
-      padding: 15px;
-      border-radius: 8px;
-      margin: 20px 0;
-      display: none;
-    }
-    #success-message {
-      color: #27ae60;
-      margin-top: 15px;
-      display: none;
-    }
-    .currency {
-      position: absolute;
-      right: 15px;
-      top: 38px;
-      color: #7f8c8d;
-      font-weight: 500;
-    }
-    /* Seção de Histórico com o mesmo estilo do container principal */
+
+    /* Seção de histórico */
     .history {
-      max-width: 600px;
-      margin: 0 auto;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(10px);
-      overflow-x: auto;  /* permite rolagem horizontal se necessário */
+      width: 100%;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .history h3 {
+      text-align: center;
+      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    #date-filter {
+      border: 1.5px solid #ccc;
+      border-radius: 6px;
+      padding: 5px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    #date-filter:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 4px rgba(52, 152, 219, 0.2);
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 15px;
+      font-size: 0.9rem;
+      margin-top: 10px;
       min-width: 700px;
     }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-    th, td {
-      padding: 10px;
-      text-align: center;
-    }
-    th {
+    table thead {
       background: #3498db;
       color: #fff;
     }
-    #date-filter {
-      margin-bottom: 15px;
-      padding: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    th, td {
+      border: 1px solid #eee;
+      padding: 8px 10px;
+      text-align: center;
     }
+    .history .actions {
+      margin-top: 20px;
+      text-align: center;
+    }
+    /* Botão de exportar CSV */
+    .history .actions button {
+      background: #2ecc71;
+    }
+    .history .actions button:hover {
+      background: #27ae60;
+    }
+
   </style>
 </head>
 <body>
-  <!-- Cabeçalho com informações do usuário -->
+  <!-- Cabeçalho do usuário (login/logout) -->
   <div id="user-info">
     <span id="user-name"></span>
     <button id="sign-out">Sair</button>
   </div>
 
-  <!-- Container da Calculadora e Login -->
+  <!-- Container da Calculadora -->
   <div class="container" id="calculator-container">
-    <h2>📊 Calculadora Surebet</h2>
-    
-    <!-- Botão de Login com Google -->
-    <div class="actions">
-      <button id="google-login">Login com Google</button>
-    </div>
-    
+    <h2>Calculadora Surebet</h2>
+
+    <!-- Mensagem de erro -->
     <div id="error-message"></div>
 
-    <!-- ====== CAMPOS DE INPUT ====== -->
+    <!-- Inputs para Odds e Stakes -->
     <div class="input-group">
       <div class="input-container">
         <label for="odd1">Odd 1</label>
@@ -227,20 +257,18 @@
         <input type="number" step="0.01" id="odd2" placeholder="Ex: 2.20">
       </div>
     </div>
-
     <div class="input-group">
-      <div class="input-container">
+      <div class="input-container" style="position:relative;">
         <label for="stake1">Valor Aposta 1</label>
-        <div class="currency">R$</div>
+        <span class="currency">R$</span>
         <input type="number" step="0.01" id="stake1" placeholder="0.00">
       </div>
-      <div class="input-container">
+      <div class="input-container" style="position:relative;">
         <label for="stake2">Valor Aposta 2</label>
-        <div class="currency">R$</div>
+        <span class="currency">R$</span>
         <input type="number" step="0.01" id="stake2" placeholder="0.00">
       </div>
     </div>
-
     <div class="input-group">
       <div class="input-container">
         <label for="bookmaker">Casa de Aposta</label>
@@ -248,30 +276,36 @@
       </div>
     </div>
 
-    <!-- ====== RESULTADOS ====== -->
+    <!-- Resultados -->
     <div class="results">
       <div class="result-item" id="total-invested">
-        Total Investido: <span>0.00</span>
+        Total Investido:
+        <span>0.00</span>
       </div>
       <div class="result-item">
-        Lucro Garantido: <span id="profit-amount">0.00</span>
+        Lucro Garantido:
+        <span id="profit-amount">0.00</span>
       </div>
       <div class="result-item">
-        ROI (%): <span id="profit-percentage">0.00%</span>
+        ROI (%):
+        <span id="profit-percentage">0.00%</span>
       </div>
     </div>
 
-    <!-- BOTÃO SALVAR -->
+    <!-- Ações de salvar / login -->
     <div class="actions">
+      <button id="google-login">Login com Google</button>
       <button id="save-bet">Salvar Aposta</button>
       <div id="loading" class="loading">Salvando...</div>
       <div id="success-message">✔ Aposta registrada com sucesso!</div>
     </div>
   </div>
 
-  <!-- Seção de Histórico de Apostas -->
-  <div class="history" id="history-section" style="display: none;">
+  <!-- Histórico -->
+  <div class="history" id="history-section" style="display:none;">
     <h3>Histórico de Apostas</h3>
+
+    <!-- Filtro de data -->
     <div class="actions">
       <select id="date-filter">
         <option value="all">Todos</option>
@@ -296,7 +330,7 @@
           <th>ROI (%)</th>
         </tr>
       </thead>
-      <tbody><!-- Carregado em tempo real --></tbody>
+      <tbody></tbody>
     </table>
 
     <div class="actions">
@@ -304,7 +338,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL -->
+  <!-- Script principal -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { 
@@ -325,14 +359,14 @@
       browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // ====== CONFIGURAÇÃO FIREBASE ======
+    // ==== CONFIGURAÇÕES DO FIREBASE (Ajuste para seu projeto) ====
     const firebaseConfig = {
-      apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
-      authDomain: "surebet-8alac.firebaseapp.com",
-      projectId: "surebet-8alac",
-      storageBucket: "surebet-8alac.appspot.com",
-      messagingSenderId: "356453418095",
-      appId: "1:356453418095:web:b5fa12af09432b9676b99a"
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_PROJECT.firebaseapp.com",
+      projectId: "SEU_PROJECT",
+      storageBucket: "SEU_PROJECT.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef1234"
     };
 
     // Inicializa Firebase
@@ -341,10 +375,10 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Persistência local
+    // Mantém usuário logado após refresh
     await setPersistence(auth, browserLocalPersistence);
 
-    // ====== Elementos da interface ======
+    // Elementos
     const elements = {
       odd1: document.getElementById('odd1'),
       odd2: document.getElementById('odd2'),
@@ -366,24 +400,24 @@
     const signOutButton = document.getElementById('sign-out');
     const historySection = document.getElementById('history-section');
 
-    let currentUser = null;       // usuário logado
-    let unsubscribeHistory = null; // para parar o onSnapshot antigo quando mudar o filtro
+    let currentUser = null;
+    let unsubscribeHistory = null;
 
     // Observador de autenticação
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
-        console.log('Usuário autenticado:', currentUser.displayName);
+        console.log("[Auth] Logado como:", currentUser.displayName);
         userName.textContent = currentUser.displayName || "Usuário";
-        userInfo.style.display = 'block';
+        userInfo.style.display = 'flex';
         elements.googleLoginButton.style.display = 'none';
         historySection.style.display = 'block';
-        // Carrega histórico inicial
+        // Carrega histórico
         loadBetHistory(currentUser.uid, 'all');
       } else {
         currentUser = null;
         userInfo.style.display = 'none';
-        elements.googleLoginButton.style.display = 'block';
+        elements.googleLoginButton.style.display = 'inline-block';
         historySection.style.display = 'none';
       }
     });
@@ -392,35 +426,34 @@
     signOutButton.addEventListener('click', async () => {
       try {
         await auth.signOut();
-        console.log("Usuário deslogado!");
+        console.log("[Auth] Usuário saiu!");
       } catch (error) {
-        console.error("Erro ao sair:", error);
+        console.error("[Auth] Erro ao sair:", error);
       }
     });
 
-    // ====== Cálculo Surebet ======
+    // ====== Cálculos da Calculadora Surebet ======
     function calculateProfit() {
       const o1 = parseFloat(elements.odd1.value);
       const o2 = parseFloat(elements.odd2.value);
       const s1 = parseFloat(elements.stake1.value) || 0;
       const s2 = parseFloat(elements.stake2.value) || 0;
 
-      const total = s1 + s2;
-      elements.totalInvested.textContent = total.toFixed(2);
+      const totalInvestment = s1 + s2;
+      elements.totalInvested.textContent = totalInvestment.toFixed(2);
 
       let profitPct = 0, profitAmt = 0;
       if (o1 > 0 && o2 > 0) {
-        const totImpl = (1/o1 + 1/o2);
-        if (totImpl < 1) {
-          profitPct = ((1 / totImpl) - 1) * 100;
-          profitAmt = total * (profitPct / 100);
+        const totalImpl = (1 / o1 + 1 / o2);
+        if (totalImpl < 1) {
+          profitPct = ((1 / totalImpl) - 1) * 100;
+          profitAmt = totalInvestment * (profitPct / 100);
         }
       }
       elements.profitPercentage.textContent = profitPct.toFixed(2) + '%';
       elements.profitAmount.textContent = profitAmt.toFixed(2);
     }
 
-    // Recalcula stake ao mudar a odd
     function calculateStakes() {
       const o1 = parseFloat(elements.odd1.value);
       const o2 = parseFloat(elements.odd2.value);
@@ -450,27 +483,21 @@
       );
     });
 
-    function handleStakeInput(inp, other, oddI, oddO) {
-      const val = parseFloat(inp.value);
-      if (oddI > 0 && oddO > 0 && !isNaN(val)) {
-        other.value = ((val * oddI) / oddO).toFixed(2);
+    function handleStakeInput(inputEl, otherEl, oddForInput, oddForOther) {
+      const val = parseFloat(inputEl.value);
+      if (oddForInput > 0 && oddForOther > 0 && !isNaN(val)) {
+        otherEl.value = ((val * oddForInput) / oddForOther).toFixed(2);
       }
       calculateProfit();
     }
 
     // ====== Carregar Histórico ======
     function loadBetHistory(uid, filter) {
-      // se já houver um onSnapshot ativo, paramos para não duplicar
       if (unsubscribeHistory) {
         unsubscribeHistory();
       }
       const betsRef = collection(db, 'bets');
-      // query base
-      let betsQuery = query(
-        betsRef,
-        where('uid', '==', uid),
-        orderBy('timestamp','desc')
-      );
+      let betsQuery = query(betsRef, where('uid','==',uid), orderBy('timestamp','desc'));
 
       if (filter !== 'all') {
         const now = new Date();
@@ -484,33 +511,26 @@
         } else if (filter === '30d') {
           startDate.setDate(now.getDate() - 30);
         }
+        // Usa string ISO pro filtro
         betsQuery = query(
           betsRef,
           where('uid','==',uid),
-          // Filtra os docs cujo timestamp >= startDate.toISOString()
           where('timestamp','>=', startDate.toISOString()),
           orderBy('timestamp','desc')
         );
       }
 
-      console.log("[loadBetHistory] Iniciando onSnapshot...");
       unsubscribeHistory = onSnapshot(betsQuery, (snapshot) => {
-        console.log("[loadBetHistory] snapshot size:", snapshot.size);
         const tbody = document.querySelector('#bet-history-table tbody');
         tbody.innerHTML = "";
         snapshot.forEach(doc => {
           const data = doc.data();
-          console.log("[loadBetHistory] docId:", doc.id, " data:", data);
-
-          // 'timestamp' é string ISO => "2025-03-15T12:34:56.789Z"
+          // Convertendo data ISO para hora local
           const dateObj = new Date(data.timestamp);
-          // Ajusta para horário de Brasília (ou outro fuso)
-          const dateStr = dateObj.toLocaleString("pt-BR", {
-            timeZone: "America/Sao_Paulo"
-          });
+          const dateStr = dateObj.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
+          const row = document.createElement('tr');
+          row.innerHTML = `
             <td>${dateStr}</td>
             <td>${data.bookmaker || ''}</td>
             <td>${data.odd1.toFixed(2)}</td>
@@ -521,19 +541,18 @@
             <td>${data.lucro.toFixed(2)}</td>
             <td>${data.roi.toFixed(2)}%</td>
           `;
-          tbody.appendChild(tr);
+          tbody.appendChild(row);
         });
       }, (error) => {
-        console.error("[loadBetHistory] Erro onSnapshot:", error);
+        console.error("[Histórico] Erro onSnapshot:", error);
         elements.errorMessage.textContent = "Erro ao carregar histórico: " + error.message;
         elements.errorMessage.style.display = 'block';
       });
     }
 
-    // Ao mudar o filtro
-    elements.dateFilter.addEventListener('change', (event) => {
+    elements.dateFilter.addEventListener('change', (e) => {
       if (currentUser) {
-        loadBetHistory(currentUser.uid, event.target.value);
+        loadBetHistory(currentUser.uid, e.target.value);
       }
     });
 
@@ -565,11 +584,10 @@
     // ====== Salvar Aposta ======
     elements.saveButton.addEventListener('click', async () => {
       if (!currentUser) {
-        elements.errorMessage.textContent = "Por favor, faça login antes de salvar a aposta.";
+        elements.errorMessage.textContent = "Por favor, faça login com o Google antes de salvar a aposta.";
         elements.errorMessage.style.display = 'block';
         return;
       }
-      console.log("[save-bet] Iniciando salvamento...");
       elements.loading.style.display = 'block';
       elements.errorMessage.style.display = 'none';
       try {
@@ -584,34 +602,33 @@
           lucro: parseFloat(elements.profitAmount.textContent),
           roi: parseFloat(elements.profitPercentage.textContent.replace('%','')),
           bookmaker: elements.bookmaker.value || "",
-          timestamp: nowISO // <-- String ISO para evitar datas 1970
+          timestamp: nowISO
         };
-        console.log("[save-bet] Enviando betData =>", betData);
+        console.log("[Salvar] Enviando betData =>", betData);
+
         const docRef = await addDoc(collection(db, 'bets'), betData);
-        console.log("[save-bet] Salvo com docId:", docRef.id);
+        console.log("[Salvar] Aposta salva com docId:", docRef.id);
 
         elements.successMessage.style.display = 'block';
         setTimeout(() => {
           elements.successMessage.style.display = 'none';
         }, 3000);
-      } catch (err) {
-        console.error("[save-bet] Erro =>", err);
-        elements.errorMessage.textContent = `Erro: ${err.message}`;
+      } catch (error) {
+        console.error("[Salvar] Erro =>", error);
+        elements.errorMessage.textContent = `Erro: ${error.message}`;
         elements.errorMessage.style.display = 'block';
       } finally {
-        console.log("[save-bet] Fim do salvamento.");
         elements.loading.style.display = 'none';
       }
     });
 
     // ====== Login com Google ======
     elements.googleLoginButton.addEventListener('click', async () => {
-      console.log("[login] Tentando login com Google...");
       try {
         await signInWithPopup(auth, provider);
-        console.log("[login] Login Google bem-sucedido!");
+        console.log("[Login] Google bem-sucedido!");
       } catch (error) {
-        console.error("[login] Erro =>", error);
+        console.error("[Login] Erro =>", error);
         elements.errorMessage.textContent = `Erro no login: ${error.message}`;
         elements.errorMessage.style.display = 'block';
       }
