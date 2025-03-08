@@ -325,15 +325,15 @@
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // Configurações do Firebase
+    // ==== Configuração do Firebase com appId ====
     const firebaseConfig = {
-      apiKey: "AIzaSy...",
-      authDomain: "surebet-8a1ac.firebaseapp.com",
-      projectId: "surebet-8a1ac",
-      storageBucket: "surebet-8a1ac.firebasestorage.app",
+      apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
+      authDomain: "surebet-8alac.firebaseapp.com",
+      projectId: "surebet-8alac",
+      storageBucket: "surebet-8alac.appspot.com",
       messagingSenderId: "356453418095",
-      appId: "1:356453418095:web:b5fa12af09432b9676b99a",
-      measurementId: "G-WYX4MDS2F8"
+      appId: "1:356453418095:web:b5fa12af09432b9676b99a"  // <-- App ID aqui
+      // Se tiver measurementId, inclua também
     };
 
     // Inicializa Firebase
@@ -499,7 +499,6 @@
           startDate.setDate(now.getDate() - 30);
         }
 
-        // Se nosso timestamp for Firestore Timestamp, podemos comparar diretamente com o objeto Date
         betsQuery = query(
           betsRef,
           where('uid', '==', uid),
@@ -521,7 +520,7 @@
             // Timestamp nativo do Firestore
             dateObj = data.timestamp.toDate();
           } else {
-            // Caso ainda existam docs antigos com outro formato, tente converter
+            // Se houver docs antigos em string, tenta converter
             dateObj = new Date(data.timestamp);
           }
 
@@ -601,7 +600,7 @@
           lucro: parseFloat(elements.profitAmount.textContent),
           roi: parseFloat(elements.profitPercentage.textContent.replace('%', '')),
           bookmaker: elements.bookmaker.value || "",
-          // Aqui salvamos o campo como Timestamp do Firestore para facilitar a ordenação e o filtro
+          // Salva como Timestamp do Firestore:
           timestamp: serverTimestamp()
         };
         console.log("Salvando aposta:", betData);
