@@ -233,6 +233,7 @@
   </style>
 </head>
 <body>
+
   <!-- Cabeçalho do usuário (login/logout) -->
   <div id="user-info">
     <span id="user-name"></span>
@@ -258,12 +259,12 @@
       </div>
     </div>
     <div class="input-group">
-      <div class="input-container">
+      <div class="input-container" style="position:relative;">
         <label for="stake1">Valor Aposta 1</label>
         <span class="currency">R$</span>
         <input type="number" step="0.01" id="stake1" placeholder="0.00">
       </div>
-      <div class="input-container">
+      <div class="input-container" style="position:relative;">
         <label for="stake2">Valor Aposta 2</label>
         <span class="currency">R$</span>
         <input type="number" step="0.01" id="stake2" placeholder="0.00">
@@ -359,12 +360,12 @@
       browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // ==== CONFIGURAÇÕES DO FIREBASE ====
+    // ==== CONFIGURAÇÃO DO FIREBASE ====
     const firebaseConfig = {
       apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
-      authDomain: "surebet-8alac.firebaseapp.com",
-      projectId: "surebet-8alac",
-      storageBucket: "surebet-8alac.appspot.com",
+      authDomain: "surebet-8a1ac.firebaseapp.com",
+      projectId: "surebet-8a1ac",
+      storageBucket: "surebet-8a1ac.appspot.com",
       messagingSenderId: "356453418095",
       appId: "1:356453418095:web:b5fa12af09432b9676b99a"
     };
@@ -378,7 +379,7 @@
     // Mantém usuário logado após refresh
     await setPersistence(auth, browserLocalPersistence);
 
-    // Elementos
+    // Referências de elementos
     const elements = {
       odd1: document.getElementById('odd1'),
       odd2: document.getElementById('odd2'),
@@ -395,23 +396,24 @@
       bookmaker: document.getElementById('bookmaker'),
       dateFilter: document.getElementById('date-filter')
     };
+
     const userInfo = document.getElementById('user-info');
     const userName = document.getElementById('user-name');
     const signOutButton = document.getElementById('sign-out');
     const historySection = document.getElementById('history-section');
-
     let currentUser = null;
     let unsubscribeHistory = null;
 
-    // Observador de autenticação
+    // === Observador de Autenticação ===
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
-        console.log("[Auth] Logado como:", currentUser.displayName);
+        console.log("[Auth] Logado como:", currentUser.displayName || user.uid);
         userName.textContent = currentUser.displayName || "Usuário";
         userInfo.style.display = 'flex';
         elements.googleLoginButton.style.display = 'none';
         historySection.style.display = 'block';
+
         // Carrega histórico
         loadBetHistory(currentUser.uid, 'all');
       } else {
@@ -422,32 +424,32 @@
       }
     });
 
-    // LOGOUT
+    // === Logout ===
     signOutButton.addEventListener('click', async () => {
       try {
         await auth.signOut();
-        console.log("[Auth] Usuário saiu!");
       } catch (error) {
-        console.error("[Auth] Erro ao sair:", error);
+        console.error("[Logout] Erro =>", error);
       }
     });
 
-    // ====== Cálculos da Calculadora Surebet ======
+    // === Cálculos de Surebet ===
     function calculateProfit() {
       const o1 = parseFloat(elements.odd1.value);
       const o2 = parseFloat(elements.odd2.value);
       const s1 = parseFloat(elements.stake1.value) || 0;
       const s2 = parseFloat(elements.stake2.value) || 0;
 
-      const totalInvestment = s1 + s2;
-      elements.totalInvested.textContent = totalInvestment.toFixed(2);
+      const total = s1 + s2;
+      elements.totalInvested.textContent = total.toFixed(2);
 
-      let profitPct = 0, profitAmt = 0;
+      let profitPct = 0;
+      let profitAmt = 0;
       if (o1 > 0 && o2 > 0) {
-        const totalImpl = (1 / o1 + 1 / o2);
-        if (totalImpl < 1) {
-          profitPct = ((1 / totalImpl) - 1) * 100;
-          profitAmt = totalInvestment * (profitPct / 100);
+        const sum = (1/o1 + 1/o2);
+        if (sum < 1) {
+          profitPct = ((1 / sum) - 1) * 100;
+          profitAmt = total * (profitPct / 100);
         }
       }
       elements.profitPercentage.textContent = profitPct.toFixed(2) + '%';
@@ -457,8 +459,11 @@
     function calculateStakes() {
       const o1 = parseFloat(elements.odd1.value);
       const o2 = parseFloat(elements.odd2.value);
+      const s1 = parseFloat(elements.stake1.value) || 0;
+      const s2 = parseFloat(elements.stake2.value) || 0;
+
       if (o1 > 0 && o2 > 0) {
-        const total = parseFloat(elements.stake1.value) + parseFloat(elements.stake2.value);
+        const total = s1 + s2;
         if (total > 0) {
           elements.stake1.value = ((total * o2) / (o1 + o2)).toFixed(2);
           elements.stake2.value = ((total * o1) / (o1 + o2)).toFixed(2);
@@ -469,29 +474,42 @@
 
     elements.odd1.addEventListener('input', calculateStakes);
     elements.odd2.addEventListener('input', calculateStakes);
-
     elements.stake1.addEventListener('input', () => {
-      handleStakeInput(elements.stake1, elements.stake2,
+      handleStakeInput(
+        elements.stake1,
+        elements.stake2,
         parseFloat(elements.odd1.value),
         parseFloat(elements.odd2.value)
       );
     });
     elements.stake2.addEventListener('input', () => {
-      handleStakeInput(elements.stake2, elements.stake1,
+      handleStakeInput(
+        elements.stake2,
+        elements.stake1,
         parseFloat(elements.odd2.value),
         parseFloat(elements.odd1.value)
       );
     });
 
-    function handleStakeInput(inputEl, otherEl, oddForInput, oddForOther) {
-      const val = parseFloat(inputEl.value);
-      if (oddForInput > 0 && oddForOther > 0 && !isNaN(val)) {
-        otherEl.value = ((val * oddForInput) / oddForOther).toFixed(2);
+    function handleStakeInput(elA, elB, oddA, oddB) {
+      const val = parseFloat(elA.value);
+      if (oddA > 0 && oddB > 0 && !isNaN(val)) {
+        elB.value = ((val * oddA) / oddB).toFixed(2);
       }
       calculateProfit();
     }
 
-    // ====== Carregar Histórico ======
+    // === Login com Google ===
+    elements.googleLoginButton.addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        elements.errorMessage.textContent = `Erro no login: ${error.message}`;
+        elements.errorMessage.style.display = 'block';
+      }
+    });
+
+    // === Carregar Histórico (onSnapshot) ===
     function loadBetHistory(uid, filter) {
       if (unsubscribeHistory) {
         unsubscribeHistory();
@@ -499,6 +517,7 @@
       const betsRef = collection(db, 'bets');
       let betsQuery = query(betsRef, where('uid','==',uid), orderBy('timestamp','desc'));
 
+      // Filtro de data
       if (filter !== 'all') {
         const now = new Date();
         const startDate = new Date();
@@ -511,7 +530,6 @@
         } else if (filter === '30d') {
           startDate.setDate(now.getDate() - 30);
         }
-        // Usa string ISO pro filtro
         betsQuery = query(
           betsRef,
           where('uid','==',uid),
@@ -525,10 +543,9 @@
         tbody.innerHTML = "";
         snapshot.forEach(doc => {
           const data = doc.data();
-          // Convertendo data ISO para hora local
+          // Convertendo string ISO -> Data local
           const dateObj = new Date(data.timestamp);
-          const dateStr = dateObj.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-
+          const dateStr = dateObj.toLocaleString("pt-BR",{ timeZone: "America/Sao_Paulo" });
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${dateStr}</td>
@@ -543,54 +560,51 @@
           `;
           tbody.appendChild(row);
         });
-      }, (error) => {
-        console.error("[Histórico] Erro onSnapshot:", error);
-        elements.errorMessage.textContent = "Erro ao carregar histórico: " + error.message;
+      }, (err) => {
+        elements.errorMessage.textContent = `Erro ao carregar histórico: ${err.message}`;
         elements.errorMessage.style.display = 'block';
       });
     }
 
-    elements.dateFilter.addEventListener('change', (e) => {
+    // Seletor de filtro de data
+    elements.dateFilter.addEventListener('change', (ev) => {
       if (currentUser) {
-        loadBetHistory(currentUser.uid, e.target.value);
+        loadBetHistory(currentUser.uid, ev.target.value);
       }
     });
 
-    // ====== Exportar CSV ======
+    // === Exportar CSV ===
     document.getElementById('export-csv').addEventListener('click', () => {
-      exportTableToCSV('historico_apostas.csv');
-    });
-    function exportTableToCSV(filename) {
+      const rows = document.querySelectorAll('#bet-history-table tr');
       const csv = [];
-      const rows = document.querySelectorAll("#bet-history-table tr");
       rows.forEach(row => {
-        const cols = row.querySelectorAll("td, th");
+        const cols = row.querySelectorAll('td, th');
         const rowData = [];
         cols.forEach(col => {
-          rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+          rowData.push('\"' + col.innerText.replace(/\"/g, '\"\"') + '\"');
         });
-        csv.push(rowData.join(","));
+        csv.push(rowData.join(','));
       });
-      const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
-      const downloadLink = document.createElement("a");
-      downloadLink.download = filename;
-      downloadLink.href = window.URL.createObjectURL(csvFile);
-      downloadLink.style.display = "none";
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    }
+      const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.download = 'historico_apostas.csv';
+      link.href = window.URL.createObjectURL(csvFile);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
 
-    // ====== Salvar Aposta ======
+    // === Salvar Aposta no Firestore ===
     elements.saveButton.addEventListener('click', async () => {
       if (!currentUser) {
         elements.errorMessage.textContent = "Por favor, faça login com o Google antes de salvar a aposta.";
         elements.errorMessage.style.display = 'block';
         return;
       }
-      console.log("[Salvar] Iniciando o salvamento da aposta...");
-      elements.loading.style.display = 'block';
       elements.errorMessage.style.display = 'none';
+      elements.loading.style.display = 'block';
+
       try {
         const nowISO = new Date().toISOString();
         const betData = {
@@ -603,42 +617,29 @@
           lucro: parseFloat(elements.profitAmount.textContent),
           roi: parseFloat(elements.profitPercentage.textContent.replace('%','')),
           bookmaker: elements.bookmaker.value || "",
-          timestamp: nowISO
+          timestamp: nowISO // salva data local como string ISO
         };
-        console.log("[Salvar] betData =>", betData);
 
-        const docRef = await addDoc(collection(db, 'bets'), betData);
-        console.log("[Salvar] Aposta salva com docId:", docRef.id);
-
+        await addDoc(collection(db, 'bets'), betData);
         elements.successMessage.style.display = 'block';
-        setTimeout(() => {
-          elements.successMessage.style.display = 'none';
-        }, 3000);
-      } catch (error) {
-        console.error("[Salvar] Erro =>", error);
-        elements.errorMessage.textContent = `Erro: ${error.message}`;
+        setTimeout(() => { elements.successMessage.style.display = 'none'; }, 3000);
+      } catch (err) {
+        elements.errorMessage.textContent = `Erro ao salvar aposta: ${err.message}`;
         elements.errorMessage.style.display = 'block';
       } finally {
         elements.loading.style.display = 'none';
-        console.log("[Salvar] Fim do salvamento.");
       }
     });
 
-    // ====== Login com Google ======
-    elements.googleLoginButton.addEventListener('click', async () => {
-      console.log("[Login] Tentando login com Google...");
-      try {
-        await signInWithPopup(auth, provider);
-        console.log("[Login] Google bem-sucedido!");
-      } catch (error) {
-        console.error("[Login] Erro =>", error);
-        elements.errorMessage.textContent = `Erro no login: ${error.message}`;
-        elements.errorMessage.style.display = 'block';
-      }
-    });
-
-    // Inicia os cálculos com zero
-    calculateProfit();
+    // Inicia o ROI e Lucro como 0
+    function initCalculator() {
+      elements.odd1.value = "";
+      elements.odd2.value = "";
+      elements.stake1.value = "";
+      elements.stake2.value = "";
+      calculateProfit();
+    }
+    initCalculator(); // define tudo como 0 no carregamento
   </script>
 </body>
 </html>
