@@ -95,6 +95,7 @@
     .input-container {
       flex: 1;
       min-width: 200px;
+      position: relative;
     }
     .input-container label {
       font-weight: 500;
@@ -119,7 +120,7 @@
     .currency {
       position: absolute;
       right: 15px;
-      top: 37px;
+      top: 38px;
       color: #aaa;
       font-size: 0.85rem;
     }
@@ -229,7 +230,6 @@
     .history .actions button:hover {
       background: #27ae60;
     }
-
   </style>
 </head>
 <body>
@@ -258,12 +258,12 @@
       </div>
     </div>
     <div class="input-group">
-      <div class="input-container" style="position:relative;">
+      <div class="input-container">
         <label for="stake1">Valor Aposta 1</label>
         <span class="currency">R$</span>
         <input type="number" step="0.01" id="stake1" placeholder="0.00">
       </div>
-      <div class="input-container" style="position:relative;">
+      <div class="input-container">
         <label for="stake2">Valor Aposta 2</label>
         <span class="currency">R$</span>
         <input type="number" step="0.01" id="stake2" placeholder="0.00">
@@ -359,14 +359,14 @@
       browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // ==== CONFIGURAÇÕES DO FIREBASE (Ajuste para seu projeto) ====
+    // ==== CONFIGURAÇÕES DO FIREBASE ====
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY",
-      authDomain: "SEU_PROJECT.firebaseapp.com",
-      projectId: "SEU_PROJECT",
-      storageBucket: "SEU_PROJECT.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234567890:web:abcdef1234"
+      apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
+      authDomain: "surebet-8alac.firebaseapp.com",
+      projectId: "surebet-8alac",
+      storageBucket: "surebet-8alac.appspot.com",
+      messagingSenderId: "356453418095",
+      appId: "1:356453418095:web:b5fa12af09432b9676b99a"
     };
 
     // Inicializa Firebase
@@ -588,6 +588,7 @@
         elements.errorMessage.style.display = 'block';
         return;
       }
+      console.log("[Salvar] Iniciando o salvamento da aposta...");
       elements.loading.style.display = 'block';
       elements.errorMessage.style.display = 'none';
       try {
@@ -604,7 +605,7 @@
           bookmaker: elements.bookmaker.value || "",
           timestamp: nowISO
         };
-        console.log("[Salvar] Enviando betData =>", betData);
+        console.log("[Salvar] betData =>", betData);
 
         const docRef = await addDoc(collection(db, 'bets'), betData);
         console.log("[Salvar] Aposta salva com docId:", docRef.id);
@@ -619,11 +620,13 @@
         elements.errorMessage.style.display = 'block';
       } finally {
         elements.loading.style.display = 'none';
+        console.log("[Salvar] Fim do salvamento.");
       }
     });
 
     // ====== Login com Google ======
     elements.googleLoginButton.addEventListener('click', async () => {
+      console.log("[Login] Tentando login com Google...");
       try {
         await signInWithPopup(auth, provider);
         console.log("[Login] Google bem-sucedido!");
