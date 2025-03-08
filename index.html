@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Calculadora Surebet Profissional</title>
   <style>
     * {
@@ -176,7 +176,7 @@
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 15px;
-      min-width: 700px; /* Ajustado para acomodar a nova coluna */
+      min-width: 700px;
     }
     table, th, td {
       border: 1px solid #ccc;
@@ -324,7 +324,7 @@
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // Configuração do Firebase (substitua com suas credenciais)
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCKEdVxlZ7QZCKzwMWwTjvJw6gkWBPU1Ks",
       authDomain: "surebet-8a1ac.firebaseapp.com",
@@ -335,12 +335,13 @@
       measurementId: "G-WYX4MDS2F8"
     };
 
+    // Inicializa Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Referências aos elementos da interface
+    // Referências dos elementos
     const elements = {
       odd1: document.getElementById('odd1'),
       odd2: document.getElementById('odd2'),
@@ -355,19 +356,17 @@
       successMessage: document.getElementById('success-message'),
       googleLoginButton: document.getElementById('google-login'),
       bookmaker: document.getElementById('bookmaker'),
-      dateFilter: document.getElementById('date-filter') // Para o filtro
+      dateFilter: document.getElementById('date-filter')
     };
-
-    // Referências para o cabeçalho com informações do usuário
     const userInfo = document.getElementById('user-info');
     const userName = document.getElementById('user-name');
     const signOutButton = document.getElementById('sign-out');
     const historySection = document.getElementById('history-section');
 
     let currentUser = null;
-    let unsubscribeHistory = null; // Para parar o onSnapshot ao mudar o filtro
+    let unsubscribeHistory = null; // Para remover o listener anterior ao mudar o filtro
 
-    // Observador do estado de autenticação
+    // Observador de autenticação
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
@@ -376,7 +375,7 @@
         userInfo.style.display = 'block';
         elements.googleLoginButton.style.display = 'none';
         historySection.style.display = 'block';
-        // Carrega histórico inicial (sem filtros)
+        // Carrega histórico inicial (sem filtros => 'all')
         loadBetHistory(currentUser.uid, 'all');
       } else {
         currentUser = null;
@@ -386,7 +385,7 @@
       }
     });
 
-    // Logout
+    // Função de logout
     signOutButton.addEventListener('click', async () => {
       try {
         await auth.signOut();
@@ -396,35 +395,18 @@
       }
     });
 
-    // Funções de cálculo
-    function calculateStakes() {
-      const o1 = parseFloat(elements.odd1.value);
-      const o2 = parseFloat(elements.odd2.value);
-      if (o1 > 0 && o2 > 0) {
-        const total = parseFloat(elements.stake1.value) + parseFloat(elements.stake2.value);
-        if (total > 0) {
-          elements.stake1.value = ((total * o2) / (o1 + o2)).toFixed(2);
-          elements.stake2.value = ((total * o1) / (o1 + o2)).toFixed(2);
-        }
-      }
-      calculateProfit();
-    }
-
-    function handleStakeInput(inputElement, otherElement, odd1, odd2) {
-      const value = parseFloat(inputElement.value);
-      if (odd1 > 0 && odd2 > 0 && !isNaN(value)) {
-        otherElement.value = ((value * odd1) / odd2).toFixed(2);
-      }
-      calculateProfit();
-    }
-
+    // ------------------------------
+    // CÁLCULOS DE SUREBET
+    // ------------------------------
     function calculateProfit() {
       const o1 = parseFloat(elements.odd1.value);
       const o2 = parseFloat(elements.odd2.value);
       const s1 = parseFloat(elements.stake1.value) || 0;
       const s2 = parseFloat(elements.stake2.value) || 0;
+
       const totalInvestment = s1 + s2;
       elements.totalInvested.textContent = totalInvestment.toFixed(2);
+
       let profitPercentage = 0;
       let profitAmount = 0;
       if (o1 > 0 && o2 > 0) {
@@ -438,26 +420,65 @@
       elements.profitAmount.textContent = profitAmount.toFixed(2);
     }
 
-    // Carrega o histórico de apostas com base no filtro selecionado
+    // Recalcula ambas stakes quando se edita a odd
+    function calculateStakes() {
+      const o1 = parseFloat(elements.odd1.value);
+      const o2 = parseFloat(elements.odd2.value);
+      if (o1 > 0 && o2 > 0) {
+        const total = parseFloat(elements.stake1.value) + parseFloat(elements.stake2.value);
+        if (total > 0) {
+          // Ajusta stake1 e stake2 proporcionalmente às odds
+          elements.stake1.value = ((total * o2) / (o1 + o2)).toFixed(2);
+          elements.stake2.value = ((total * o1) / (o1 + o2)).toFixed(2);
+        }
+      }
+      calculateProfit();
+    }
+
+    // Quando edita manualmente Stake1 ou Stake2, recalcula a outra
+    function handleStakeInput(inputElement, otherElement, oddForInput, oddForOther) {
+      const value = parseFloat(inputElement.value);
+      if (oddForInput > 0 && oddForOther > 0 && !isNaN(value)) {
+        otherElement.value = ((value * oddForInput) / oddForOther).toFixed(2);
+      }
+      calculateProfit();
+    }
+
+    // Listeners
+    elements.odd1.addEventListener('input', calculateStakes);
+    elements.odd2.addEventListener('input', calculateStakes);
+
+    elements.stake1.addEventListener('input', () => {
+      // Se digita na stake1, stake2 é recalculada
+      handleStakeInput(elements.stake1, elements.stake2,
+                       parseFloat(elements.odd1.value),
+                       parseFloat(elements.odd2.value));
+    });
+    elements.stake2.addEventListener('input', () => {
+      // Se digita na stake2, stake1 é recalculada
+      handleStakeInput(elements.stake2, elements.stake1,
+                       parseFloat(elements.odd2.value),
+                       parseFloat(elements.odd1.value));
+    });
+
+    // ------------------------------
+    // CARREGAR HISTÓRICO (FILTROS)
+    // ------------------------------
     function loadBetHistory(uid, filter) {
-      // Se já houver um onSnapshot ativo, paramos para não acumular listeners
+      // Se já houver um listener aberto, paramos.
       if (unsubscribeHistory) {
         unsubscribeHistory();
       }
-
       const betsRef = collection(db, 'bets');
-      let betsQuery;
 
-      // Ordenação sempre do mais recente para o mais antigo
-      // e filtragem por UID
-      // Por padrão, buscamos tudo (filter === 'all')
-      betsQuery = query(
+      // Monta uma query inicial para "Todos"
+      let betsQuery = query(
         betsRef,
         where('uid', '==', uid),
         orderBy('timestamp', 'desc')
       );
 
-      // Caso não seja 'all', calculamos a data mínima
+      // Se o filtro não for "all", ajusta para buscar a data mínima
       if (filter !== 'all') {
         const now = new Date();
         const startDate = new Date();
@@ -471,8 +492,11 @@
         } else if (filter === '30d') {
           startDate.setDate(now.getDate() - 30);
         }
-        
         const isoStart = startDate.toISOString();
+
+        // Recria a query com where('timestamp','>=', isoStart)
+        // Observação: Isto funciona se 'timestamp' for guardado como string (ex: .toISOString()).
+        // Se antes você salvou como Timestamp do Firestore, ajustamos abaixo na conversão.
         betsQuery = query(
           betsRef,
           where('uid', '==', uid),
@@ -481,16 +505,28 @@
         );
       }
 
-      // Mantemos a referência para podermos parar depois (unsubscribe)
       unsubscribeHistory = onSnapshot(betsQuery, (querySnapshot) => {
         const tbody = document.querySelector('#bet-history-table tbody');
         tbody.innerHTML = "";
         querySnapshot.forEach(doc => {
           const data = doc.data();
-          // Convertemos a string timestamp para data local
-          const dateObj = new Date(data.timestamp);
 
-          // Montamos a linha da tabela
+          // Tenta converter o campo timestamp em Data local
+          let dateObj;
+          if (!data.timestamp) {
+            // Se não existir timestamp, pula ou defina um default
+            return;
+          } else if (typeof data.timestamp.toDate === 'function') {
+            // Caso seja um Firestore Timestamp
+            dateObj = data.timestamp.toDate();
+          } else if (typeof data.timestamp === 'number') {
+            // Caso tenha sido salvo como número (ex: Date.now())
+            dateObj = new Date(data.timestamp);
+          } else {
+            // Supondo string em formato ISO
+            dateObj = new Date(data.timestamp);
+          }
+
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${dateObj.toLocaleString()}</td>
@@ -518,7 +554,9 @@
       }
     });
 
-    // Exporta a tabela para CSV
+    // ------------------------------
+    // EXPORTAR CSV
+    // ------------------------------
     function exportTableToCSV(filename) {
       const csv = [];
       const rows = document.querySelectorAll("#bet-history-table tr");
@@ -526,7 +564,8 @@
         const cols = row.querySelectorAll("td, th");
         const rowData = [];
         cols.forEach(col => {
-          rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+          // Garante que aspas não quebrem o CSV
+          rowData.push('"'+ col.innerText.replace(/"/g, '""') +'"');
         });
         csv.push(rowData.join(","));
       });
@@ -539,12 +578,13 @@
       downloadLink.click();
       document.body.removeChild(downloadLink);
     }
-
     document.getElementById('export-csv').addEventListener('click', () => {
       exportTableToCSV('historico_apostas.csv');
     });
 
-    // Salva a aposta no Firestore
+    // ------------------------------
+    // SALVAR APOSTA NO FIRESTORE
+    // ------------------------------
     elements.saveButton.addEventListener('click', async () => {
       if (!currentUser) {
         elements.errorMessage.textContent = "Por favor, realize o login com o Google antes de salvar a aposta.";
@@ -564,7 +604,8 @@
           lucro: parseFloat(elements.profitAmount.textContent),
           roi: parseFloat(elements.profitPercentage.textContent.replace('%', '')),
           bookmaker: elements.bookmaker.value || "",
-          timestamp: new Date().toISOString() // Salvando como ISOString
+          // Aqui salvamos como string ISO. Você pode salvar como Timestamp do Firestore também.
+          timestamp: new Date().toISOString()
         };
         console.log("Salvando aposta:", betData);
         await addDoc(collection(db, 'bets'), betData);
@@ -582,7 +623,9 @@
       }
     });
 
-    // Login com Google (se o usuário clicar manualmente)
+    // ------------------------------
+    // LOGIN COM GOOGLE
+    // ------------------------------
     elements.googleLoginButton.addEventListener('click', async () => {
       try {
         await signInWithPopup(auth, provider);
@@ -593,7 +636,7 @@
       }
     });
 
-    // Inicializa os cálculos
+    // Inicializa os valores de ROI e lucro como 0
     calculateProfit();
   </script>
 </body>
