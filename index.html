@@ -11,7 +11,6 @@
       padding: 0;
       box-sizing: border-box;
     }
-
     /* Body minimalista */
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -23,7 +22,6 @@
       align-items: center;
       padding: 20px;
     }
-
     /* Cabeçalho do usuário (login/logout) */
     #user-info {
       width: 100%;
@@ -50,7 +48,6 @@
     #user-info button:hover {
       background: #c0392b;
     }
-
     /* Container principal */
     .container {
       width: 100%;
@@ -68,7 +65,6 @@
       font-size: 1.3rem;
       color: #333;
     }
-
     /* Mensagens de erro e sucesso */
     #error-message {
       display: none;
@@ -84,7 +80,6 @@
       margin-top: 15px;
       text-align: center;
     }
-
     /* Inputs e campos */
     .input-group {
       display: flex;
@@ -124,7 +119,6 @@
       color: #aaa;
       font-size: 0.85rem;
     }
-
     /* Resultados da calculadora */
     .results {
       background: #fafafa;
@@ -146,7 +140,6 @@
     .result-item span {
       font-weight: 600;
     }
-
     /* Ações (botões) */
     .actions {
       text-align: center;
@@ -172,7 +165,6 @@
       color: #3498db;
       text-align: center;
     }
-
     /* Seção de Histórico - Layout Atualizado */
     .history {
       width: 100%;
@@ -182,7 +174,6 @@
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       padding: 20px;
       margin-top: 30px;
-      overflow-x: auto;
     }
     .history h3 {
       text-align: center;
@@ -209,19 +200,22 @@
       border-color: #3498db;
       box-shadow: 0 0 4px rgba(52, 152, 219, 0.2);
     }
-    /* Configura a tabela para usar layout fixo e largura total */
+    /* Container para scroll horizontal */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+    /* Tabela com largura mínima para forçar scroll em telas menores */
     .history table {
       width: 100%;
-      table-layout: fixed;
+      min-width: 700px;
       border-collapse: collapse;
+      font-size: 0.95rem;
     }
     .history table th, .history table td {
       border: 1px solid #eee;
       padding: 10px 15px;
       text-align: center;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
     .history table tbody tr:hover {
       background-color: #f2f2f2;
@@ -246,9 +240,7 @@
   <!-- Container da Calculadora -->
   <div class="container" id="calculator-container">
     <h2>Calculadora Surebet</h2>
-
     <div id="error-message"></div>
-
     <div class="input-group">
       <div class="input-container">
         <label for="odd1">Odd 1</label>
@@ -259,7 +251,6 @@
         <input type="number" step="0.01" id="odd2" placeholder="Ex: 2.20">
       </div>
     </div>
-
     <div class="input-group">
       <div class="input-container" style="position:relative;">
         <label for="stake1">Valor Aposta 1</label>
@@ -272,14 +263,12 @@
         <input type="number" step="0.01" id="stake2" placeholder="0.00">
       </div>
     </div>
-
     <div class="input-group">
       <div class="input-container">
         <label for="bookmaker">Casa de Aposta</label>
         <input type="text" id="bookmaker" placeholder="Ex: Bet365">
       </div>
     </div>
-
     <div class="results">
       <div class="result-item" id="total-invested">
         Total Investido: <span>0.00</span>
@@ -291,7 +280,6 @@
         ROI (%): <span id="profit-percentage">0.00%</span>
       </div>
     </div>
-
     <div class="actions">
       <button id="google-login">Login com Google</button>
       <button id="save-bet">Salvar Aposta</button>
@@ -313,33 +301,25 @@
       </select>
       <button id="export-csv">Exportar CSV</button>
     </div>
-    <table id="bet-history-table">
-      <colgroup>
-        <col style="width: 15%;">
-        <col style="width: 20%;">
-        <col style="width: 10%;">
-        <col style="width: 10%;">
-        <col style="width: 10%;">
-        <col style="width: 10%;">
-        <col style="width: 10%;">
-        <col style="width: 10%;">
-        <col style="width: 5%;">
-      </colgroup>
-      <thead>
-        <tr>
-          <th>Data/Hora</th>
-          <th>Casa de Aposta</th>
-          <th>Odd 1</th>
-          <th>Odd 2</th>
-          <th>Stake 1</th>
-          <th>Stake 2</th>
-          <th>Total Investido</th>
-          <th>Lucro</th>
-          <th>ROI (%)</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <!-- Container que possibilita o scroll horizontal -->
+    <div class="table-responsive">
+      <table id="bet-history-table">
+        <thead>
+          <tr>
+            <th>Data/Hora</th>
+            <th>Casa de Aposta</th>
+            <th>Odd 1</th>
+            <th>Odd 2</th>
+            <th>Stake 1</th>
+            <th>Stake 2</th>
+            <th>Total Investido</th>
+            <th>Lucro</th>
+            <th>ROI (%)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <script type="module">
@@ -434,10 +414,8 @@
       const o2 = parseFloat(odd2.value) || 0;
       const s1 = parseFloat(stake1.value) || 0;
       const s2 = parseFloat(stake2.value) || 0;
-
       const total = s1 + s2;
       totalInvested.textContent = total.toFixed(2);
-
       let profitPct = 0;
       let profitAmt = 0;
       if (o1 > 0 && o2 > 0) {
@@ -457,12 +435,10 @@
       const o2 = parseFloat(odd2.value) || 0;
       let s1 = parseFloat(stake1.value) || 0;
       let s2 = parseFloat(stake2.value) || 0;
-
       let total = s1 + s2;
       if (total === 0) {
         total = 100; // Valor padrão se nenhum stake for informado
       }
-      
       if (o1 > 0 && o2 > 0) {
         stake1.value = ((total * o2) / (o1 + o2)).toFixed(2);
         stake2.value = ((total * o1) / (o1 + o2)).toFixed(2);
@@ -504,7 +480,6 @@
       if (unsubscribeHistory) unsubscribeHistory();
       const betsRef = collection(db, 'bets');
       let betsQuery = query(betsRef, where('uid','==',uid), orderBy('timestamp','desc'));
-
       if (filter !== 'all') {
         const now = new Date();
         const startDate = new Date();
@@ -524,7 +499,6 @@
           orderBy('timestamp','desc')
         );
       }
-
       unsubscribeHistory = onSnapshot(betsQuery, (snapshot) => {
         const tbody = document.querySelector('#bet-history-table tbody');
         tbody.innerHTML = '';
@@ -602,7 +576,6 @@
           bookmaker: bookmaker.value || "",
           timestamp: new Date().toISOString()
         };
-
         await addDoc(collection(db, 'bets'), newBet);
         successMessage.style.display = 'block';
         setTimeout(() => { successMessage.style.display = 'none'; }, 3000);
