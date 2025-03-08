@@ -236,7 +236,7 @@
       background: #27ae60;
     }
 
-    /* Media Query para otimizar a tabela em dispositivos móveis */
+    /* Media Query para otimização da tabela em dispositivos móveis */
     @media (max-width: 600px) {
       .history table, .history thead, .history tbody, .history th, .history td, .history tr {
         display: block;
@@ -252,10 +252,12 @@
         padding: 10px;
       }
       .history td {
-        border: none;
+        display: block;
+        text-align: right;
         padding: 10px;
+        padding-left: 50%;
         position: relative;
-        text-align: left;
+        border: none;
         white-space: normal;
       }
       .history td:before {
@@ -263,6 +265,9 @@
         position: absolute;
         left: 10px;
         top: 10px;
+        width: 40%;
+        padding-right: 10px;
+        text-align: left;
         font-weight: bold;
       }
     }
