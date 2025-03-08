@@ -182,6 +182,7 @@
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       padding: 20px;
       margin-top: 30px;
+      overflow-x: auto;
     }
     .history h3 {
       text-align: center;
@@ -208,21 +209,19 @@
       border-color: #3498db;
       box-shadow: 0 0 4px rgba(52, 152, 219, 0.2);
     }
+    /* Configura a tabela para usar layout fixo e largura total */
     .history table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
-      font-size: 0.95rem;
-      overflow-x: auto;
-      display: block;
-    }
-    .history table thead {
-      background: #3498db;
-      color: #fff;
     }
     .history table th, .history table td {
       border: 1px solid #eee;
       padding: 10px 15px;
       text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .history table tbody tr:hover {
       background-color: #f2f2f2;
@@ -234,42 +233,6 @@
     }
     .history .actions button:hover {
       background: #27ae60;
-    }
-
-    /* Media Query para otimização da tabela em dispositivos móveis */
-    @media (max-width: 600px) {
-      .history table, .history thead, .history tbody, .history th, .history td, .history tr {
-        display: block;
-      }
-      .history thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
-      }
-      .history tr {
-        border: 1px solid #eee;
-        margin-bottom: 10px;
-        padding: 10px;
-      }
-      .history td {
-        display: block;
-        text-align: right;
-        padding: 10px;
-        padding-left: 50%;
-        position: relative;
-        border: none;
-        white-space: normal;
-      }
-      .history td:before {
-        content: attr(data-label);
-        position: absolute;
-        left: 10px;
-        top: 10px;
-        width: 40%;
-        padding-right: 10px;
-        text-align: left;
-        font-weight: bold;
-      }
     }
   </style>
 </head>
@@ -351,6 +314,17 @@
       <button id="export-csv">Exportar CSV</button>
     </div>
     <table id="bet-history-table">
+      <colgroup>
+        <col style="width: 15%;">
+        <col style="width: 20%;">
+        <col style="width: 10%;">
+        <col style="width: 10%;">
+        <col style="width: 10%;">
+        <col style="width: 10%;">
+        <col style="width: 10%;">
+        <col style="width: 10%;">
+        <col style="width: 5%;">
+      </colgroup>
       <thead>
         <tr>
           <th>Data/Hora</th>
@@ -560,15 +534,15 @@
           const dateStr = dateObj.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td data-label="Data/Hora">${dateStr}</td>
-            <td data-label="Casa de Aposta">${data.bookmaker || ''}</td>
-            <td data-label="Odd 1">${data.odd1.toFixed(2)}</td>
-            <td data-label="Odd 2">${data.odd2.toFixed(2)}</td>
-            <td data-label="Stake 1">${data.stake1.toFixed(2)}</td>
-            <td data-label="Stake 2">${data.stake2.toFixed(2)}</td>
-            <td data-label="Total Investido">${data.total.toFixed(2)}</td>
-            <td data-label="Lucro">${data.lucro.toFixed(2)}</td>
-            <td data-label="ROI (%)">${data.roi.toFixed(2)}%</td>
+            <td>${dateStr}</td>
+            <td>${data.bookmaker || ''}</td>
+            <td>${data.odd1.toFixed(2)}</td>
+            <td>${data.odd2.toFixed(2)}</td>
+            <td>${data.stake1.toFixed(2)}</td>
+            <td>${data.stake2.toFixed(2)}</td>
+            <td>${data.total.toFixed(2)}</td>
+            <td>${data.lucro.toFixed(2)}</td>
+            <td>${data.roi.toFixed(2)}%</td>
           `;
           tbody.appendChild(row);
         });
